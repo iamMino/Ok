@@ -1,0 +1,72 @@
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local Button = Instance.new("TextButton")
+
+ScreenGui.Parent = game:GetService("CoreGui") -- Ensures UI persists after death
+
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 250, 0, 100)
+Frame.Position = UDim2.new(0.5, -125, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+Frame.BorderSizePixel = 3
+Frame.Active = true -- Allows dragging
+Frame.Draggable = true -- Enable dragging
+Frame.BorderColor3 = Color3.fromRGB(255, 0, 255) -- Neon pink border
+
+Button.Parent = Frame
+Button.Size = UDim2.new(0.8, 0, 0.6, 0)
+Button.Position = UDim2.new(0.1, 0, 0.2, 0)
+Button.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple default
+Button.Text = "ENABLE AUTO CLICK"
+Button.TextScaled = true
+Button.TextColor3 = Color3.fromRGB(255, 0, 255) -- Neon pink text
+Button.Font = Enum.Font.GothamBold
+
+local glow = Instance.new("UIStroke", Frame)
+glow.Thickness = 3
+glow.Color = Color3.fromRGB(255, 0, 255) -- Neon pink glow
+glow.Transparency = 0.5
+
+glow = Instance.new("UIStroke", Button)
+glow.Thickness = 2
+glow.Color = Color3.fromRGB(255, 0, 255) -- Neon pink glow for button
+glow.Transparency = 0.5
+
+local autoClickEnabled = false
+local function autoClick()
+    while autoClickEnabled do
+        local clickDetector = workspace:FindFirstChild("NPCs") and workspace.NPCs:FindFirstChild("ShanghaivaniaInk") and 
+            workspace.NPCs.ShanghaivaniaInk:FindFirstChild("KindnessShield") and 
+            workspace.NPCs.ShanghaivaniaInk.KindnessShield:FindFirstChild("ClickDetector")
+        if clickDetector then
+            pcall(function()
+                fireclickdetector(clickDetector)
+            end)
+        end
+        task.wait() -- No delay for maximum speed
+    end
+end
+
+task.spawn(function() -- Continuously checks for ClickDetector
+    while true do
+        if autoClickEnabled then
+            autoClick()
+        end
+        task.wait(0.1)
+    end
+end)
+
+function toggleAutoClick()
+    autoClickEnabled = not autoClickEnabled
+    if autoClickEnabled then
+        Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black when enabled
+        Button.TextColor3 = Color3.fromRGB(255, 0, 255) -- Neon pink text when enabled
+        Button.Text = "DISABLE AUTOCLICK"
+    else
+        Button.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple when disabled
+        Button.TextColor3 = Color3.fromRGB(255, 0, 255) -- Neon pink text
+        Button.Text = "ENABLE AUTO CLICK"
+    end
+end
+
+Button.MouseButton1Click:Connect(toggleAutoClick) -- Connect button to function
