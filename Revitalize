@@ -33,18 +33,24 @@ statusLabel.TextSize = 16
 
 local autoClickEnabled = false
 
+local function findChangingFolder()
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj:IsA("Folder") and #obj:GetChildren() > 0 then
+            return obj
+        end
+    end
+    return nil
+end
+
 local function autoClick()
     while autoClickEnabled do
-        local parentModel = workspace:FindFirstChild("H_8\006M\028")
-        if parentModel and parentModel:GetChildren()[17] then
-            local targetModel = parentModel:GetChildren()[17]:FindFirstChild("Model")
-            if targetModel then
-                for _, obj in pairs(targetModel:GetChildren()) do
-                    if obj:IsA("ClickDetector") and obj.Parent.Name:lower():find("skull") then
-                        pcall(function()
-                            fireclickdetector(obj)
-                        end)
-                    end
+        local targetFolder = findChangingFolder()
+        if targetFolder then
+            for _, obj in pairs(targetFolder:GetDescendants()) do
+                if obj:IsA("ClickDetector") then
+                    pcall(function()
+                        fireclickdetector(obj)
+                    end)
                 end
             end
         end
