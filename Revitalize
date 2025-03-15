@@ -32,7 +32,12 @@ statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 16
 
 local autoClickEnabled = false
-local excludedClickDetector = workspace.map.shrinetrigger.ClickDetector  -- Store teleport ClickDetector
+
+-- Excluded ClickDetectors
+local excludedClickDetectors = {
+    workspace.map.shrinetrigger.ClickDetector,
+    workspace.map.shrine.box.click
+}
 
 local function findChangingFolder()
     for _, obj in pairs(workspace:GetChildren()) do
@@ -48,7 +53,7 @@ local function autoClick()
         local targetFolder = findChangingFolder()
         if targetFolder then
             for _, obj in pairs(targetFolder:GetDescendants()) do
-                if obj:IsA("ClickDetector") and obj ~= excludedClickDetector then
+                if obj:IsA("ClickDetector") and not table.find(excludedClickDetectors, obj) then
                     pcall(function()
                         fireclickdetector(obj)
                     end)
