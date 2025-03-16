@@ -1,12 +1,11 @@
 local player = game.Players.LocalPlayer
-local autoClickEnabled = false
 
 -- UI Setup
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 local frame = Instance.new("Frame", screenGui)
 frame.Size = UDim2.new(0, 250, 0, 100)
 frame.Position = UDim2.new(0.5, -125, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(0, 100, 0) -- Green UI
+frame.BackgroundColor3 = Color3.fromRGB(10, 100, 10) -- Green UI
 frame.BorderSizePixel = 2
 frame.Active = true
 frame.Draggable = true
@@ -14,7 +13,7 @@ frame.Draggable = true
 local button = Instance.new("TextButton", frame)
 button.Size = UDim2.new(1, 0, 0.5, 0)
 button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.Font = Enum.Font.SourceSansBold
 button.TextSize = 18
@@ -28,51 +27,54 @@ statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 16
 
-local function getChangingFolder()
-    for _, obj in pairs(workspace:GetChildren()) do
-        if obj:IsA("Folder") and obj:FindFirstChildWhichIsA("ClickDetector") then
-            return obj
-        end
-    end
-    return nil
-end
-
-local function autoClick()
-    while autoClickEnabled do
-        local folder = getChangingFolder()
-        if folder then
-            for _, obj in pairs(folder:GetDescendants()) do
-                if obj:IsA("ClickDetector") then
-                    local parentPath = obj.Parent:GetFullName()
-                    
-                    -- **Exclude ClickDetectors that interfere with autofarm**
-                    if not parentPath:find("workspace.map.shrinetrigger") and
-                       not parentPath:find("workspace.map.shrine.box") and
-                       not parentPath:find("workspace.map.shop.Sans.openshop") then
-                        pcall(function()
-                            fireclickdetector(obj)
-                        end)
-                    end
-                end
-            end
-        end
-        task.wait() -- **Fast clicking**
-    end
-end
+local farming = false
 
 button.MouseButton1Click:Connect(function()
-    autoClickEnabled = not autoClickEnabled
-    if autoClickEnabled then
+    farming = not farming
+    if farming then
         button.Text = "DISABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
         statusLabel.Text = "Status: Farming..."
-        autoClick()
     else
         button.Text = "ENABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
         statusLabel.Text = "Status: Idle"
     end
 end)
 
--- Anti-AFK
+-- Auto Click Function
+local function autoClick()
+    while farming do
+        local fellClickDetector = workspace:FindFirstChild("Fell", true) -- Find "Fell" anywhere
+        if fellClickDetector and fellClickDetector:IsA("ClickDetector") then
+            local parentFolder = fellClickDetector.Parent.Parent -- Get the changing folder
+            for _, obj in pairs(parentFolder:GetChildren()) do
+                if obj:IsA("Model") and obj:FindFirstChild("ClickDetector") then
+                    local cd = obj.ClickDetector
+                    if cd and cd.Parent then
+                        -- Exclude unwanted ClickDetectors
+                        if cd.Parent.Name ~= "shrinetrigger" and cd.Parent.Name ~= "box" and cd.Parent.Name ~= "openshop" then
+                            pcall(function() fireclickdetector(cd) end)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.05) -- Clicks super fast
+    end
+end
+
+-- Auto farm loop
+task.spawn(function()
+    while true do
+        if farming then
+            autoClick()
+        end
+        task.wait(0.1)
+    end
+end)
+
+-- Anti-AFK Script
 local vu = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     vu:CaptureController()
