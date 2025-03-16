@@ -42,19 +42,22 @@ button.MouseButton1Click:Connect(function()
     end
 end)
 
--- Auto Click Function
+-- Function to find all ClickDetectors dynamically and fire them
 local function autoClick()
     while farming do
-        local fellClickDetector = workspace:FindFirstChild("Fell", true) -- Find "Fell" anywhere
-        if fellClickDetector and fellClickDetector:IsA("ClickDetector") then
-            local parentFolder = fellClickDetector.Parent.Parent -- Get the changing folder
-            for _, obj in pairs(parentFolder:GetChildren()) do
-                if obj:IsA("Model") and obj:FindFirstChild("ClickDetector") then
-                    local cd = obj.ClickDetector
-                    if cd and cd.Parent then
+        -- Loop through all children of the workspace
+        for _, folder in pairs(workspace:GetChildren()) do
+            -- Check if the folder contains ClickDetectors
+            if folder:IsA("Folder") then
+                for _, obj in pairs(folder:GetChildren()) do
+                    if obj:IsA("Model") and obj:FindFirstChild("ClickDetector") then
+                        local clickDetector = obj:FindFirstChild("ClickDetector")
                         -- Exclude unwanted ClickDetectors
-                        if cd.Parent.Name ~= "shrinetrigger" and cd.Parent.Name ~= "box" and cd.Parent.Name ~= "openshop" then
-                            pcall(function() fireclickdetector(cd) end)
+                        if clickDetector and clickDetector.Parent and
+                           not (clickDetector.Parent.Name == "shrinetrigger" or
+                                clickDetector.Parent.Name == "box" or
+                                clickDetector.Parent.Name == "openshop") then
+                            pcall(function() fireclickdetector(clickDetector) end)
                         end
                     end
                 end
