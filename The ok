@@ -1,19 +1,15 @@
 local player = game.Players.LocalPlayer
-local dataStoreService = game:GetService("DataStoreService")
-local farmDataStore = dataStoreService:GetDataStore("BossFarmState") -- Global save store
+local replicatedStorage = game:GetService("ReplicatedStorage")
 
--- Load saved state
-local farming = false
-local success, savedState = pcall(function()
-    return farmDataStore:GetAsync(player.UserId)
-end)
-
-if success then
-    print("✅ Successfully loaded saved state: ", savedState)
-    farming = savedState or false
-else
-    print("❌ Failed to load saved state.")
+-- Create a value to store the state if it doesn't exist
+if not replicatedStorage:FindFirstChild("BossFarmEnabled") then
+    local boolValue = Instance.new("BoolValue")
+    boolValue.Name = "BossFarmEnabled"
+    boolValue.Parent = replicatedStorage
+    boolValue.Value = false
 end
+
+local bossFarmEnabled = replicatedStorage:FindFirstChild("BossFarmEnabled")
 
 -- UI Setup
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
@@ -48,24 +44,22 @@ statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 16
 statusLabel.Parent = frame
 
--- Function to Save Farming State
-local function saveFarmState(state)
-    print("🔵 Attempting to save state:", state)
-    local success, err = pcall(function()
-        farmDataStore:SetAsync(player.UserId, state)
-    end)
+-- Load previous state
+local farming = bossFarmEnabled.Value
+if farming then
+    button.Text = "DISABLE AUTO FARM"
+    button.BackgroundColor3 = Color3.fromRGB(120, 50, 255)
+    statusLabel.Text = "Status: Farming"
+end
 
-    if success then
-        print("✅ Successfully saved state:", state)
-    else
-        print("❌ Failed to save state. Error:", err)
-    end
+-- Function to Save State
+local function saveFarmState(state)
+    bossFarmEnabled.Value = state  -- Saves the value in ReplicatedStorage
 end
 
 -- Button Toggle Auto Farm
 button.MouseButton1Click:Connect(function()
     farming = not farming
-    print("🔄 Farming toggled. New state:", farming)
     saveFarmState(farming)
 
     if farming then
@@ -79,7 +73,7 @@ button.MouseButton1Click:Connect(function()
     end
 end)
 
--- Auto-Enable Farming if it was enabled before leaving
+-- Auto-enable farming if it was enabled before switching servers
 if farming then
     print("⚡ Auto-starting farm since it was enabled before leaving.")
 end
