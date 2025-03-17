@@ -1,6 +1,6 @@
 local player = game.Players.LocalPlayer
 
--- UI Setup
+-- UI Setup (Same UI, Green)
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 local frame = Instance.new("Frame", screenGui)
 frame.Size = UDim2.new(0, 250, 0, 100)
@@ -35,20 +35,20 @@ statusLabel.Parent = frame
 
 local farming = false
 
--- Excluded ClickDetectors
-local excludedPaths = {
-    "workspace.map.shrinetrigger.ClickDetector",
-    "workspace.map.shrine.box.click",
-    "workspace.map.shop.Sans.openshop"
+-- Excluded ClickDetector Names
+local excludedNames = {
+    "shrinetrigger",
+    "click",
+    "openshop"
 }
 
 local function isExcluded(clickDetector)
     local success, result = pcall(function()
-        return clickDetector:GetFullName()
+        return clickDetector.Parent and clickDetector.Parent.Name
     end)
-    if success then
-        for _, path in ipairs(excludedPaths) do
-            if result == path then
+    if success and result then
+        for _, name in ipairs(excludedNames) do
+            if result:lower() == name:lower() then
                 return true
             end
         end
@@ -71,7 +71,7 @@ local function clickAllDetectors()
                 end
             end
         end
-        task.wait(0.05) -- Faster but optimized click speed
+        task.wait(0.05) -- Fast, but safe
     end
 end
 
