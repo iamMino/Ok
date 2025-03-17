@@ -1,85 +1,95 @@
 local player = game.Players.LocalPlayer
+local farming = false
 
--- UI Setup
+-- UI Setup (Original UI, unchanged)
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 local frame = Instance.new("Frame", screenGui)
 frame.Size = UDim2.new(0, 250, 0, 100)
 frame.Position = UDim2.new(0.5, -125, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(10, 100, 10) -- Green UI
+frame.BackgroundColor3 = Color3.fromRGB(20, 10, 30) -- Dark Purple Background
 frame.BorderSizePixel = 2
 frame.Active = true
 frame.Draggable = true
 
+local uiGlow = Instance.new("UIStroke", frame)
+uiGlow.Color = Color3.fromRGB(100, 50, 255) -- Neon Blue Glow
+uiGlow.Thickness = 3
+
 local button = Instance.new("TextButton", frame)
 button.Size = UDim2.new(1, 0, 0.5, 0)
 button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 150) -- Deep Blue Button
+button.TextColor3 = Color3.fromRGB(180, 100, 255) -- Light Purple Text
 button.Font = Enum.Font.SourceSansBold
 button.TextSize = 18
+button.Parent = frame
 
 local statusLabel = Instance.new("TextLabel", frame)
 statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
 statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
 statusLabel.Text = "Status: Idle"
 statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.TextColor3 = Color3.fromRGB(200, 150, 255) -- Light Purple Text
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 16
-
-local farming = false
-
-button.MouseButton1Click:Connect(function()
-    farming = not farming
-    if farming then
-        button.Text = "DISABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-        statusLabel.Text = "Status: Farming..."
-    else
-        button.Text = "ENABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-        statusLabel.Text = "Status: Idle"
-    end
-end)
-
--- Function to find all ClickDetectors dynamically and fire them
-local function autoClick()
-    while farming do
-        -- Loop through all children of the workspace
-        for _, folder in pairs(workspace:GetChildren()) do
-            -- Check if the folder contains ClickDetectors
-            if folder:IsA("Folder") then
-                for _, obj in pairs(folder:GetChildren()) do
-                    if obj:IsA("Model") and obj:FindFirstChild("ClickDetector") then
-                        local clickDetector = obj:FindFirstChild("ClickDetector")
-                        -- Exclude unwanted ClickDetectors
-                        if clickDetector and clickDetector.Parent and
-                           not (clickDetector.Parent.Name == "shrinetrigger" or
-                                clickDetector.Parent.Name == "box" or
-                                clickDetector.Parent.Name == "openshop") then
-                            pcall(function() fireclickdetector(clickDetector) end)
-                        end
-                    end
-                end
-            end
-        end
-        task.wait(0.05) -- Clicks super fast
-    end
-end
-
--- Auto farm loop
-task.spawn(function()
-    while true do
-        if farming then
-            autoClick()
-        end
-        task.wait(0.1)
-    end
-end)
+statusLabel.Parent = frame
 
 -- Anti-AFK Script
 local vu = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     vu:CaptureController()
     vu:ClickButton2(Vector2.new())
+end)
+
+-- Excluded ClickDetector Names (Old method)
+local excludedNames = {
+    "shrinetrigger",
+    "box",
+    "openshop"
+}
+
+local function isExcluded(clickDetector)
+    for _, name in pairs(excludedNames) do
+        if string.lower(clickDetector.Name) == string.lower(name) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Function to Click All ClickDetectors in Dynamic Folders (Optimized)
+local function clickAllDetectors()
+    while farming do
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj:IsA("Folder") then
+                for _, item in pairs(obj:GetChildren()) do
+                    if item:IsA("Model") or item:IsA("Part") then
+                        local detector = item:FindFirstChildWhichIsA("ClickDetector")
+                        if detector and not isExcluded(detector) then
+                            pcall(function()
+                                fireclickdetector(detector)
+                            end)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(math.random(50,80)/1000)  -- Delay between 0.05 and 0.08 seconds
+    end
+end
+
+-- Button Toggle Auto Farm
+button.MouseButton1Click:Connect(function()
+    farming = not farming
+
+    if farming then
+        button.Text = "DISABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
+        statusLabel.Text = "Status: Farming"
+        task.spawn(clickAllDetectors)
+    else
+        button.Text = "ENABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 150) -- Deep Blue
+        statusLabel.Text = "Status: Idle"
+    end
 end)
