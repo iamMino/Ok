@@ -1,40 +1,20 @@
 local player = game.Players.LocalPlayer
 
--- UI Setup (Keeping the same UI)
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 100)
-frame.Position = UDim2.new(0.5, -125, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 80, 20) -- Green Background
-frame.BorderSizePixel = 2
-frame.Active = true
-frame.Draggable = true
+-- Excluded ClickDetectors
+local excludedPaths = {
+    workspace.map.shrinetrigger.ClickDetector,
+    workspace.map.shrine.box.click,
+    workspace.map.shop.Sans.openshop
+}
 
-local uiGlow = Instance.new("UIStroke", frame)
-uiGlow.Color = Color3.fromRGB(100, 255, 100) -- Neon Green Glow
-uiGlow.Thickness = 3
-
-local button = Instance.new("TextButton", frame)
-button.Size = UDim2.new(1, 0, 0.5, 0)
-button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green Button
-button.TextColor3 = Color3.fromRGB(180, 255, 180) -- Light Green Text
-button.Font = Enum.Font.SourceSansBold
-button.TextSize = 18
-button.Parent = frame
-
-local statusLabel = Instance.new("TextLabel", frame)
-statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
-statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
-statusLabel.Text = "Status: Idle"
-statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(200, 255, 200) -- Light Green Text
-statusLabel.Font = Enum.Font.SourceSansBold
-statusLabel.TextSize = 16
-statusLabel.Parent = frame
-
-local farming = false
-local clickCooldown = 0.1 -- Delay between clicks to prevent disconnection
+local function isExcluded(clickDetector)
+    for _, excluded in pairs(excludedPaths) do
+        if clickDetector == excluded then
+            return true
+        end
+    end
+    return false
+end
 
 -- Function to Click All ClickDetectors in Dynamic Folders
 local function clickAllDetectors()
@@ -44,14 +24,14 @@ local function clickAllDetectors()
                 for _, item in pairs(obj:GetChildren()) do
                     if item:IsA("Model") or item:IsA("Part") then
                         local detector = item:FindFirstChildWhichIsA("ClickDetector")
-                        if detector then
+                        if detector and not isExcluded(detector) then
                             fireclickdetector(detector)
                         end
                     end
                 end
             end
         end
-        task.wait(clickCooldown) -- Prevent excessive clicks causing disconnect
+        task.wait(0.1) -- Prevent excessive clicks causing disconnect
     end
 end
 
