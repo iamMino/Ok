@@ -41,20 +41,20 @@ game:GetService("Players").LocalPlayer.Idled:Connect(function()
 	vu:ClickButton2(Vector2.new())
 end)
 
--- Exclusion: We want to ignore the following ClickDetectors exactly.
-local excludedPaths = {
-    "workspace.map.shrinetrigger.ClickDetector",
-    "workspace.map.shrine.box.click",
-    "workspace.map.shop.Sans.openshop"
+-- Exclusion: These ClickDetectors should NEVER be clicked.
+local excludedNames = {
+    "shrinetrigger",  -- Inside workspace.map
+    "box.click",      -- Inside workspace.map.shrine
+    "openshop"        -- Inside workspace.map.shop.Sans
 }
 
 local function isExcluded(clickDetector)
-    if not clickDetector then 
-        return false 
-    end
-    local fullName = clickDetector:GetFullName()
-    for _, path in ipairs(excludedPaths) do
-        if fullName == path then
+    if not clickDetector then return false end
+    local parent = clickDetector.Parent
+    if not parent then return false end
+
+    for _, name in ipairs(excludedNames) do
+        if string.lower(clickDetector.Name) == name then
             return true
         end
     end
@@ -66,19 +66,16 @@ local function clickAllDetectors()
     while farming do
         for _, obj in pairs(workspace:GetChildren()) do
             if obj:IsA("Folder") then
-                for _, item in pairs(obj:GetChildren()) do
-                    if item:IsA("Model") or item:IsA("Part") then
-                        local detector = item:FindFirstChildWhichIsA("ClickDetector")
-                        if detector and not isExcluded(detector) then
-                            pcall(function()
-                                fireclickdetector(detector)
-                            end)
-                        end
+                for _, item in pairs(obj:GetDescendants()) do
+                    if item:IsA("ClickDetector") and not isExcluded(item) then
+                        pcall(function()
+                            fireclickdetector(item)
+                        end)
                     end
                 end
             end
         end
-        task.wait(math.random(50,80) / 1000) -- Delay between 0.05 and 0.08 seconds
+        task.wait(math.random(50, 80) / 1000) -- Delay between 0.05 and 0.08 seconds
     end
 end
 
