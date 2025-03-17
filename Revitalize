@@ -35,20 +35,20 @@ statusLabel.Parent = frame
 
 local farming = false
 
--- Excluded ClickDetectors
-local excludedPaths = {
-    "workspace.map.shrinetrigger.ClickDetector",
-    "workspace.map.shrine.box.click",
-    "workspace.map.shop.Sans.openshop"
+-- Excluded ClickDetectors (Direct Check Instead of Path)
+local excludedNames = {
+    "shrinetrigger",
+    "box",
+    "openshop"
 }
 
 local function isExcluded(clickDetector)
-    for _, path in pairs(excludedPaths) do
-        local success, result = pcall(function()
-            return clickDetector:GetFullName()
-        end)
-        if success and result == path then
-            return true
+    local parent = clickDetector.Parent
+    if parent and parent.Parent == workspace:FindFirstChild("map") then
+        for _, name in pairs(excludedNames) do
+            if parent.Name:lower():find(name) then
+                return true
+            end
         end
     end
     return false
