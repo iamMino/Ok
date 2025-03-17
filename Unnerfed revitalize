@@ -48,16 +48,36 @@ local excludedNames = {
     "openshop"        -- Inside workspace.map.shop.Sans
 }
 
+local excludedPaths = {
+    "workspace.map.shrinetrigger.ClickDetector",
+    "workspace.map.shrine.box.click",
+    "workspace.map.shop.Sans.openshop"
+}
+
 local function isExcluded(clickDetector)
     if not clickDetector then return false end
     local parent = clickDetector.Parent
     if not parent then return false end
 
+    -- Check by Name
     for _, name in ipairs(excludedNames) do
         if string.lower(clickDetector.Name) == name then
             return true
         end
     end
+
+    -- Check by Full Path (absolute check)
+    local success, fullPath = pcall(function()
+        return clickDetector:GetFullName()
+    end)
+    if success then
+        for _, path in ipairs(excludedPaths) do
+            if fullPath == path then
+                return true
+            end
+        end
+    end
+
     return false
 end
 
