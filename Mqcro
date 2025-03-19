@@ -2,7 +2,7 @@ local player = game.Players.LocalPlayer
 local humanoidRootPart
 local humanoid
 local moving = false
-local radius = 5
+local radius = 3 -- Now moves in a 3-meter radius
 local angle = 0
 
 -- UI Setup
@@ -39,36 +39,36 @@ statusLabel.TextSize = 16
 button.Parent = frame
 statusLabel.Parent = frame
 
+-- Equip "Hellfire" Function
+local function equipHellfire()
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        local hellfire = backpack:FindFirstChild("Hellfire")
+        if hellfire then
+            hellfire.Parent = player.Character
+        end
+    end
+end
+
 -- Move in Circles Function
 local function moveInCircles()
-    while moving and humanoidRootPart do
+    while moving and humanoidRootPart and humanoid do
         local x = math.cos(angle) * radius
         local z = math.sin(angle) * radius
         local moveToPosition = Vector3.new(-0 + x, 5, 1 + z)
-        
+
         humanoid:MoveTo(moveToPosition)
-        
-        angle = angle + 0.1
+
+        angle = angle + 0.2 -- Adjust speed
         if angle >= math.pi * 2 then
             angle = 0
         end
-        
-        task.wait(0.3) -- Adjust speed
+
+        task.wait(0.3) -- Prevents excessive movement lag
     end
 end
 
--- Equip Item Function
-local function equipItem()
-    local backpack = player:FindFirstChild("Backpack")
-    if backpack then
-        local item = backpack:FindFirstChildOfClass("Tool")
-        if item then
-            item.Parent = player.Character
-        end
-    end
-end
-
--- Spam Abilities
+-- Spam Abilities (Q and E)
 local function spamAbilities()
     local uis = game:GetService("UserInputService")
     while moving do
@@ -83,13 +83,13 @@ local function spamAbilities()
     end
 end
 
--- Detect Character Respawn & Equip Item
+-- Detect Character Respawn & Equip "Hellfire"
 player.CharacterAdded:Connect(function(newCharacter)
     humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
     humanoid = newCharacter:WaitForChild("Humanoid")
-    
+
     task.wait(1)
-    equipItem()
+    equipHellfire()
 end)
 
 -- Button Toggle for Movement
