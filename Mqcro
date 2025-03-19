@@ -1,4 +1,5 @@
 local player = game.Players.LocalPlayer
+local backpack = player.Backpack
 local humanoidRootPart
 local humanoid
 local moving = false
@@ -42,13 +43,10 @@ statusLabel.Parent = frame
 
 -- Equip "Hellfire" Sword Function
 local function equipHellfire()
-    local backpack = player:FindFirstChild("Backpack")
-    if backpack then
-        local hellfire = backpack:FindFirstChild("Hellfire")
-        if hellfire then
-            hellfire.Parent = player.Character
-            swordEquipped = true
-        end
+    local hellfire = backpack:FindFirstChild("Hellfire")
+    if hellfire then
+        hellfire.Parent = player.Character
+        swordEquipped = true
     end
 end
 
