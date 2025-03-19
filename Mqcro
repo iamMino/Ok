@@ -1,0 +1,107 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+local uis = game:GetService("UserInputService")
+
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 250, 0, 100)
+frame.Position = UDim2.new(0.5, -125, 0.2, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 10, 30)
+frame.BorderSizePixel = 2
+frame.Active = true
+frame.Draggable = true
+
+local uiGlow = Instance.new("UIStroke", frame)
+uiGlow.Color = Color3.fromRGB(100, 50, 255)
+uiGlow.Thickness = 3
+
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(1, 0, 0.5, 0)
+button.Text = "ENABLE MOVEMENT"
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
+button.TextColor3 = Color3.fromRGB(180, 100, 255)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 18
+button.Parent = frame
+
+local statusLabel = Instance.new("TextLabel", frame)
+statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
+statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
+statusLabel.Text = "Status: Idle"
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(200, 150, 255)
+statusLabel.Font = Enum.Font.SourceSansBold
+statusLabel.TextSize = 16
+statusLabel.Parent = frame
+
+local moving = false
+
+local function moveInCircles()
+    local radius = 5
+    local speed = 3
+    local angle = 0
+
+    while moving do
+        local x = math.cos(angle) * radius
+        local z = math.sin(angle) * radius
+        humanoid:MoveTo(Vector3.new(-0 + x, 5, 1 + z))
+
+        angle = angle + (speed * 0.1)
+        if angle >= math.pi * 2 then
+            angle = 0
+        end
+        task.wait(0.1)
+    end
+end
+
+local function equipItem()
+    local backpack = player:FindFirstChild("Backpack")
+    if backpack then
+        local item = backpack:FindFirstChildOfClass("Tool")
+        if item then
+            item.Parent = player.Character
+        end
+    end
+end
+
+local function spamAbilities()
+    while moving do
+        uis:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
+        task.wait(0.5)
+        uis:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
+        task.wait(0.5)
+        uis:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+        task.wait(0.5)
+        uis:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+        task.wait(0.5)
+    end
+end
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoid = character:WaitForChild("Humanoid")
+    
+    task.wait(1)
+    equipItem()
+end)
+
+button.MouseButton1Click:Connect(function()
+    moving = not moving
+
+    if moving then
+        button.Text = "DISABLE MOVEMENT"
+        button.BackgroundColor3 = Color3.fromRGB(120, 50, 255)
+        statusLabel.Text = "Status: Moving"
+
+        humanoid:MoveTo(Vector3.new(-0, 5, 1))
+        task.spawn(moveInCircles)
+        task.spawn(spamAbilities)
+    else
+        button.Text = "ENABLE MOVEMENT"
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
+        statusLabel.Text = "Status: Idle"
+    end
+end)
