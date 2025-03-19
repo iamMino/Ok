@@ -1,8 +1,14 @@
+-- UI Elements
+local button = script.Parent:WaitForChild("Button") -- Adjust UI elements as needed
+local statusLabel = script.Parent:WaitForChild("StatusLabel")
+
+-- Player and Backpack setup
 local player = game.Players.LocalPlayer
 local backpack = player.Backpack
 local hellfire = backpack:WaitForChild("Hellfire")
 
-local targetPosition = Vector3.new(0, 5, 1) -- Set your position here
+-- Target position and radius for movement
+local targetPosition = Vector3.new(0, 5, 1)  -- Set your position here
 local radius = 100
 local isMoving = false
 local farming = false
@@ -64,6 +70,9 @@ local function toggleFarm()
     if farming then
         -- Equip sword and start the movement
         equipSword()
+        statusLabel.Text = "Status: Farming"
+        button.Text = "STOP FARMING"
+        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120)  -- Bright Green
         isMoving = true
         moveInCircle()
         -- Start abilities
@@ -75,11 +84,13 @@ local function toggleFarm()
         simulateTouch()
     else
         isMoving = false
-        -- Stop movement and disable abilities
+        statusLabel.Text = "Status: Idle"
+        button.Text = "START FARMING"
+        button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)  -- Dark Green
     end
 end
 
--- UI Button to toggle the farming
+-- Button Toggle Auto Farm
 button.MouseButton1Click:Connect(function()
     toggleFarm()
 end)
