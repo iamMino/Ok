@@ -1,114 +1,85 @@
--- Variables
 local player = game.Players.LocalPlayer
-local humanoidRootPart
-local humanoid
-local moving = false
-local swordEquipped = false
-local uis = game:GetService("UserInputService")
+local backpack = player.Backpack
+local hellfire = backpack:WaitForChild("Hellfire")
 
--- UI Setup
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 100)
-frame.Position = UDim2.new(0.5, -125, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 10, 30)
-frame.BorderSizePixel = 2
-frame.Active = true
-frame.Draggable = true
+local targetPosition = Vector3.new(0, 5, 1) -- Set your position here
+local radius = 100
+local isMoving = false
+local farming = false
 
-local uiGlow = Instance.new("UIStroke", frame)
-uiGlow.Color = Color3.fromRGB(100, 50, 255)
-uiGlow.Thickness = 3
-
-local button = Instance.new("TextButton", frame)
-button.Size = UDim2.new(1, 0, 0.5, 0)
-button.Text = "ENABLE MOVEMENT"
-button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
-button.TextColor3 = Color3.fromRGB(180, 100, 255)
-button.Font = Enum.Font.SourceSansBold
-button.TextSize = 18
-
-local statusLabel = Instance.new("TextLabel", frame)
-statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
-statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
-statusLabel.Text = "Status: Idle"
-statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(200, 150, 255)
-statusLabel.Font = Enum.Font.SourceSansBold
-statusLabel.TextSize = 16
-
-button.Parent = frame
-statusLabel.Parent = frame
-
--- Equip "Hellfire" Sword (only one item equipped)
-local function equipHellfire()
-    local hellfire = player.Backpack:FindFirstChild("Hellfire")
-    if hellfire then
-        -- Ensure only the Hellfire sword is equipped, and nothing else
-        if not swordEquipped then
-            hellfire.Parent = player.Character
-            swordEquipped = true
+-- Function to equip the Hellfire sword
+local function equipSword()
+    local sword = backpack:FindFirstChild("Hellfire")
+    if sword then
+        -- Equip the Hellfire sword if not already equipped
+        if player.Character and player.Character:FindFirstChild("RightHand") then
+            sword.Parent = player.Character
+            sword.Handle.CFrame = player.Character.RightHand.CFrame
         end
     end
 end
 
--- Move the character in a circular pattern
-local function moveInCircles(center, radius)
-    local angle = 0
-    while moving and humanoidRootPart and humanoid do
-        -- Calculate circular path
-        local x = center.X + math.cos(angle) * radius
-        local z = center.Z + math.sin(angle) * radius
-
-        -- Set the humanoid to move to the new position
-        humanoid:MoveTo(Vector3.new(x, center.Y, z))
-
-        -- Increase the angle to move in a circular direction
-        angle = angle + math.rad(5)
-
-        task.wait(0.1)  -- Adjust to change the speed of movement
+-- Function to use the sword abilities
+local function useAbilities()
+    local sword = backpack:FindFirstChild("Hellfire")
+    if sword then
+        local over = sword:FindFirstChild("over")
+        local wrath = sword:FindFirstChild("wrath")
+        if over then
+            over:FireServer()  -- Trigger 'over' ability
+        end
+        if wrath then
+            wrath:FireServer()  -- Trigger 'wrath' ability
+        end
     end
 end
 
--- Spam Abilities (Q and E)
-local function spamAbilities()
-    while moving do
-        -- Spam the "Q" key
-        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Q", "All")
-        task.wait(0.5)
-        -- Spam the "E" key
-        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("E", "All")
-        task.wait(0.5)
+-- Simulate touch on screen every 2 seconds
+local function simulateTouch()
+    while farming do
+        -- You can adjust the position of the touch if necessary
+        local touchPos = Vector2.new(0.5, 0.5)  -- Adjust for touch on the center
+        local touchInput = Instance.new("InputObject", game)
+        touchInput.Position = touchPos
+        game:GetService("UserInputService").InputChanged:Fire(touchInput)
+        wait(2)  -- Simulate touch every 2 seconds
     end
 end
 
--- Character Added / Respawned
-player.CharacterAdded:Connect(function(newCharacter)
-    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
-    humanoid = newCharacter:WaitForChild("Humanoid")
+-- Movement in circles
+local function moveInCircle()
+    local angle = math.rad(0)
+    while isMoving do
+        local x = targetPosition.X + math.sin(angle) * radius
+        local z = targetPosition.Z + math.cos(angle) * radius
+        player.Character:MoveTo(Vector3.new(x, targetPosition.Y, z))
+        angle = angle + math.rad(2)  -- Adjust the speed of the circle movement
+        wait(0.1)
+    end
+end
 
-    -- Equip "Hellfire" sword on respawn
-    task.wait(1)
-    equipHellfire()
-end)
-
--- Button Toggle for Movement
-button.MouseButton1Click:Connect(function()
-    moving = not moving
-
-    if moving then
-        button.Text = "DISABLE MOVEMENT"
-        button.BackgroundColor3 = Color3.fromRGB(120, 50, 255)
-        statusLabel.Text = "Status: Moving"
-
-        -- Start movement in circles with joystick style and key spamming abilities
-        local centerPosition = humanoidRootPart.Position -- The starting point for the circle
-        local radius = 100  -- Set a radius of 100 meters
-        task.spawn(moveInCircles, centerPosition, radius)
-        task.spawn(spamAbilities)
+-- Toggle the auto farm state
+local function toggleFarm()
+    farming = not farming
+    if farming then
+        -- Equip sword and start the movement
+        equipSword()
+        isMoving = true
+        moveInCircle()
+        -- Start abilities
+        while farming do
+            useAbilities()
+            wait(2) -- Adjust the wait time if needed to prevent spamming abilities
+        end
+        -- Start simulating touch every 2 seconds
+        simulateTouch()
     else
-        button.Text = "ENABLE MOVEMENT"
-        button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
-        statusLabel.Text = "Status: Idle"
+        isMoving = false
+        -- Stop movement and disable abilities
     end
+end
+
+-- UI Button to toggle the farming
+button.MouseButton1Click:Connect(function()
+    toggleFarm()
 end)
