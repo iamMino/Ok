@@ -1,4 +1,4 @@
--- UI Elements
+-- UI Elements (Do not change the UI, these are just references)
 local button = script.Parent:WaitForChild("Button") -- Adjust UI elements as needed
 local statusLabel = script.Parent:WaitForChild("StatusLabel")
 
