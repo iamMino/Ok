@@ -1,3 +1,4 @@
+-- Variables
 local player = game.Players.LocalPlayer
 local backpack = player.Backpack
 local humanoidRootPart
@@ -6,6 +7,7 @@ local moving = false
 local radius = 3 -- Circular movement radius
 local angle = 0
 local swordEquipped = false
+local uis = game:GetService("UserInputService")
 
 -- UI Setup
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
@@ -41,7 +43,7 @@ statusLabel.TextSize = 16
 button.Parent = frame
 statusLabel.Parent = frame
 
--- Equip "Hellfire" Sword Function
+-- Equip "Hellfire" Sword
 local function equipHellfire()
     local hellfire = backpack:FindFirstChild("Hellfire")
     if hellfire then
@@ -70,15 +72,17 @@ end
 
 -- Spam Abilities (Q and E)
 local function spamAbilities()
-    local uis = game:GetService("UserInputService")
     while moving do
-        uis:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
+        -- Spam the "Q" key
+        uis.InputBegan:Fire(Enum.InputType.Keyboard, Enum.KeyCode.Q, true)
         task.wait(0.5)
-        uis:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
+        uis.InputEnded:Fire(Enum.InputType.Keyboard, Enum.KeyCode.Q, true)
         task.wait(0.5)
-        uis:SendKeyEvent(true, Enum.KeyCode.E, false, nil)
+
+        -- Spam the "E" key
+        uis.InputBegan:Fire(Enum.InputType.Keyboard, Enum.KeyCode.E, true)
         task.wait(0.5)
-        uis:SendKeyEvent(false, Enum.KeyCode.E, false, nil)
+        uis.InputEnded:Fire(Enum.InputType.Keyboard, Enum.KeyCode.E, true)
         task.wait(0.5)
     end
 end
@@ -102,11 +106,9 @@ button.MouseButton1Click:Connect(function()
         button.BackgroundColor3 = Color3.fromRGB(120, 50, 255)
         statusLabel.Text = "Status: Moving"
 
-        if humanoidRootPart then
-            -- Start movement in a circle
-            task.spawn(moveInCircles)
-            task.spawn(spamAbilities)
-        end
+        -- Start movement in a circle and key spamming abilities
+        task.spawn(moveInCircles)
+        task.spawn(spamAbilities)
     else
         button.Text = "ENABLE MOVEMENT"
         button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
