@@ -32,7 +32,7 @@ statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 
 local farming = false
 
--- Function to click keybinds
+-- Function to press keybinds (Q and E)
 local function pressKey(key)
     local input = Instance.new("InputObject")
     input.UserInputType = Enum.UserInputType.Keyboard
@@ -47,22 +47,33 @@ local function moveInCircles()
     local speed = 1
     local angle = 0
 
+    local hrp = player.Character:WaitForChild("HumanoidRootPart")
+    local humanoid = player.Character:WaitForChild("Humanoid")
+
     while farming do
+        -- Calculate new target position in a circle
         local x = math.cos(angle) * radius + position.X
         local z = math.sin(angle) * radius + position.Z
-        player.Character:MoveTo(Vector3.new(x, position.Y, z))
+
+        -- Move towards the target position
+        humanoid:MoveTo(Vector3.new(x, position.Y, z))
+
+        -- Update angle for the next position
         angle = angle + math.rad(speed)
-        wait(0.1)
+
+        wait(0.1)  -- Adjust the wait time for smooth movement
     end
 end
 
--- Equip Hellfire Sword
+-- Equip Hellfire Sword (Ensure it exists in Backpack)
 local function equipHellfireSword()
-    for _, item in pairs(backpack:GetChildren()) do
-        if item.Name == "Hellfire" then
-            player.Character:WaitForChild("Humanoid"):EquipTool(item)
-            break
-        end
+    local sword = backpack:FindFirstChild("Hellfire")
+    if sword then
+        -- Equip the Hellfire sword if it's in the backpack
+        local humanoid = player.Character:WaitForChild("Humanoid")
+        humanoid:EquipTool(sword)
+    else
+        print("Hellfire sword not found in backpack!")
     end
 end
 
@@ -72,18 +83,24 @@ local function autoFarm()
         -- Equip Sword
         equipHellfireSword()
 
-        -- Use abilities
-        if player.Character:FindFirstChild("Hellfire") then
-            local sword = player.Character.Hellfire
-            if sword:FindFirstChild("over") then
-                sword.over:Activate()
+        -- Use abilities if sword exists
+        local sword = player.Character:FindFirstChild("Hellfire")
+        if sword then
+            local overAbility = sword:FindFirstChild("over")
+            local wrathAbility = sword:FindFirstChild("wrath")
+            
+            -- Use 'over' ability if it exists
+            if overAbility then
+                overAbility:Activate()
             end
-            if sword:FindFirstChild("wrath") then
-                sword.wrath:Activate()
+
+            -- Use 'wrath' ability if it exists
+            if wrathAbility then
+                wrathAbility:Activate()
             end
         end
 
-        -- Press Q and E keybinds
+        -- Press Q and E keybinds every 2 seconds
         pressKey(Enum.KeyCode.Q)
         pressKey(Enum.KeyCode.E)
         
@@ -97,8 +114,8 @@ startButton.MouseButton1Click:Connect(function()
     if farming then
         startButton.Text = "Stop Auto Farming"
         statusLabel.Text = "Status: Farming"
-        moveInCircles()
-        autoFarm()
+        task.spawn(moveInCircles)  -- Start the movement
+        autoFarm()  -- Start farming actions
     else
         startButton.Text = "Start Auto Farming"
         statusLabel.Text = "Status: Idle"
