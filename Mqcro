@@ -1,96 +1,104 @@
--- UI Elements (Do not change the UI, these are just references)
-local button = script.Parent:WaitForChild("Button") -- Adjust UI elements as needed
-local statusLabel = script.Parent:WaitForChild("StatusLabel")
-
--- Player and Backpack setup
+-- Create UI
 local player = game.Players.LocalPlayer
-local backpack = player.Backpack
-local hellfire = backpack:WaitForChild("Hellfire")
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+screenGui.Name = "AutoFarmUI"
 
--- Target position and radius for movement
-local targetPosition = Vector3.new(0, 5, 1)  -- Set your position here
-local radius = 100
-local isMoving = false
-local farming = false
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0, 0, 0, 0)
+button.Text = "ENABLE AUTO FARM"
+button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Parent = screenGui
 
--- Function to equip the Hellfire sword
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(0, 200, 0, 50)
+statusLabel.Position = UDim2.new(0, 0, 0, 60)
+statusLabel.Text = "Status: Idle"
+statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+statusLabel.Parent = screenGui
+
+-- Target position
+local targetPosition = Vector3.new(0, 5, 1) -- The initial target position
+local radius = 100 -- Radius for walking in circles
+local walkingSpeed = 16 -- Speed of walking, change if needed
+
+-- Sword and Abilities
+local sword = player.Backpack:WaitForChild("Hellfire")
+local wrathAbility = sword:WaitForChild("wrath")
+local overAbility = sword:WaitForChild("over")
+
+-- Function to Equip Sword
 local function equipSword()
-    local sword = backpack:FindFirstChild("Hellfire")
-    if sword then
-        -- Equip the Hellfire sword if not already equipped
-        if player.Character and player.Character:FindFirstChild("RightHand") then
-            sword.Parent = player.Character
-            sword.Handle.CFrame = player.Character.RightHand.CFrame
-        end
+    local swordItem = player.Backpack:FindFirstChild("Hellfire")
+    if swordItem then
+        swordItem.Parent = player.Character
     end
 end
 
--- Function to use the sword abilities
+-- Walk in Circle Function
+local function walkInCircle()
+    local angle = 0
+    while true do
+        angle = angle + math.pi / 50
+        local x = targetPosition.X + radius * math.cos(angle)
+        local z = targetPosition.Z + radius * math.sin(angle)
+
+        -- Set character position
+        local character = player.Character
+        local humanoid = character:WaitForChild("Humanoid")
+        local targetPos = Vector3.new(x, targetPosition.Y, z)
+        
+        humanoid:MoveTo(targetPos)
+        
+        wait(0.1) -- Adjust if you want smoother movement
+    end
+end
+
+-- Keybinds for Abilities (Q and E)
 local function useAbilities()
-    local sword = backpack:FindFirstChild("Hellfire")
-    if sword then
-        local over = sword:FindFirstChild("over")
-        local wrath = sword:FindFirstChild("wrath")
-        if over then
-            over:FireServer()  -- Trigger 'over' ability
-        end
-        if wrath then
-            wrath:FireServer()  -- Trigger 'wrath' ability
-        end
-    end
-end
+    while true do
+        -- Use Q and E
+        game:GetService("UserInputService"):SendKeyEvent(true, Enum.KeyCode.Q, false, game)
+        wait(1)
+        game:GetService("UserInputService"):SendKeyEvent(false, Enum.KeyCode.Q, false, game)
+        
+        wait(1)
 
--- Simulate touch on screen every 2 seconds
-local function simulateTouch()
-    while farming do
-        -- You can adjust the position of the touch if necessary
-        local touchPos = Vector2.new(0.5, 0.5)  -- Adjust for touch on the center
-        local touchInput = Instance.new("InputObject", game)
-        touchInput.Position = touchPos
-        game:GetService("UserInputService").InputChanged:Fire(touchInput)
-        wait(2)  -- Simulate touch every 2 seconds
-    end
-end
-
--- Movement in circles
-local function moveInCircle()
-    local angle = math.rad(0)
-    while isMoving do
-        local x = targetPosition.X + math.sin(angle) * radius
-        local z = targetPosition.Z + math.cos(angle) * radius
-        player.Character:MoveTo(Vector3.new(x, targetPosition.Y, z))
-        angle = angle + math.rad(2)  -- Adjust the speed of the circle movement
-        wait(0.1)
-    end
-end
-
--- Toggle the auto farm state
-local function toggleFarm()
-    farming = not farming
-    if farming then
-        -- Equip sword and start the movement
-        equipSword()
-        statusLabel.Text = "Status: Farming"
-        button.Text = "STOP FARMING"
-        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120)  -- Bright Green
-        isMoving = true
-        moveInCircle()
-        -- Start abilities
-        while farming do
-            useAbilities()
-            wait(2) -- Adjust the wait time if needed to prevent spamming abilities
-        end
-        -- Start simulating touch every 2 seconds
-        simulateTouch()
-    else
-        isMoving = false
-        statusLabel.Text = "Status: Idle"
-        button.Text = "START FARMING"
-        button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)  -- Dark Green
+        game:GetService("UserInputService"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+        wait(1)
+        game:GetService("UserInputService"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
+        
+        wait(2) -- Delay for 2 seconds before using the abilities again
     end
 end
 
 -- Button Toggle Auto Farm
+local farming = false
 button.MouseButton1Click:Connect(function()
-    toggleFarm()
+    farming = not farming
+
+    if farming then
+        button.Text = "DISABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
+        statusLabel.Text = "Status: Farming"
+        
+        -- Equip sword and start walking
+        equipSword()
+        task.spawn(walkInCircle)
+        task.spawn(useAbilities)
+    else
+        button.Text = "ENABLE AUTO FARM"
+        button.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green
+        statusLabel.Text = "Status: Idle"
+    end
+end)
+
+-- Handle Death and Auto-Equip Sword
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    local backpack = game.Players.LocalPlayer.Backpack
+    if backpack:FindFirstChild("Hellfire") then
+        equipSword() -- Re-equip the sword after death
+    end
 end)
