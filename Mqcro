@@ -105,7 +105,7 @@ button.MouseButton1Click:Connect(function()
 
         -- Start movement in circles with joystick style and key spamming abilities
         local centerPosition = humanoidRootPart.Position -- The starting point for the circle
-        local radius = 3  -- Set a radius of 3 meters
+        local radius = 100  -- Set a radius of 3 meters
         task.spawn(moveInCircles, centerPosition, radius)
         task.spawn(spamAbilities)
     else
