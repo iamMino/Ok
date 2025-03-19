@@ -1,8 +1,7 @@
 -- Create UI
 local player = game.Players.LocalPlayer
-local backpack = player.Backpack
+local backpack = player:WaitForChild("Backpack")
 local UIS = game:GetService("User InputService")
-local RunService = game:GetService("RunService")
 
 -- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -40,7 +39,8 @@ local speed = 1 -- Speed of rotation
 local function equipHellfireSword()
     local sword = backpack:FindFirstChild("Hellfire")
     if sword then
-        local humanoid = player.Character:WaitForChild("Humanoid")
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
         humanoid:EquipTool(sword)
     else
         print("Hellfire sword not found in backpack!")
@@ -85,3 +85,6 @@ startButton.MouseButton1Click:Connect(function()
         statusLabel.Text = "Status: Idle"
     end
 end)
+
+-- Ensure the UI is visible
+screenGui.Enabled = true
