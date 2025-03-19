@@ -1,6 +1,6 @@
 local player = game.Players.LocalPlayer
 local backpack = player.Backpack
-local UIS = game:GetService("UserInputService")
+local UIS = game:GetService("User InputService")
 local mouse = player:GetMouse()
 
 -- UI Setup
@@ -32,19 +32,11 @@ statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 
 local farming = false
 
--- Function to press keybinds (Q and E)
-local function pressKey(key)
-    local input = Instance.new("InputObject")
-    input.UserInputType = Enum.UserInputType.Keyboard
-    input.KeyCode = key
-    UIS.InputBegan:Fire(input)
-end
-
 -- Function to move in circles around a position
 local function moveInCircles()
-    local position = Vector3.new(0, 5, 1)
-    local radius = 100
-    local speed = 1
+    local centerPosition = Vector3.new(0, 5, 1) -- Center position to move around
+    local radius = 10 -- Radius of the circle
+    local speed = 1 -- Speed of rotation
     local angle = 0
 
     local hrp = player.Character:WaitForChild("HumanoidRootPart")
@@ -52,16 +44,16 @@ local function moveInCircles()
 
     while farming do
         -- Calculate new target position in a circle
-        local x = math.cos(angle) * radius + position.X
-        local z = math.sin(angle) * radius + position.Z
+        local x = math.cos(angle) * radius + centerPosition.X
+        local z = math.sin(angle) * radius + centerPosition.Z
 
         -- Move towards the target position
-        humanoid:MoveTo(Vector3.new(x, position.Y, z))
+        humanoid:MoveTo(Vector3.new(x, centerPosition.Y, z))
 
         -- Update angle for the next position
         angle = angle + math.rad(speed)
 
-        wait(0.1)  -- Adjust the wait time for smooth movement
+        wait(0.1) -- Adjust the wait time for smooth movement
     end
 end
 
