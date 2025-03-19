@@ -40,12 +40,15 @@ statusLabel.TextSize = 16
 button.Parent = frame
 statusLabel.Parent = frame
 
--- Equip "Hellfire" Sword
+-- Equip "Hellfire" Sword (only one item equipped)
 local function equipHellfire()
     local hellfire = player.Backpack:FindFirstChild("Hellfire")
     if hellfire then
-        hellfire.Parent = player.Character
-        swordEquipped = true
+        -- Ensure only the Hellfire sword is equipped, and nothing else
+        if not swordEquipped then
+            hellfire.Parent = player.Character
+            swordEquipped = true
+        end
     end
 end
 
@@ -71,15 +74,10 @@ end
 local function spamAbilities()
     while moving do
         -- Spam the "Q" key
-        uis.InputBegan:Fire(Enum.InputType.Keyboard, Enum.KeyCode.Q, true)
+        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Q", "All")
         task.wait(0.5)
-        uis.InputEnded:Fire(Enum.InputType.Keyboard, Enum.KeyCode.Q, true)
-        task.wait(0.5)
-
         -- Spam the "E" key
-        uis.InputBegan:Fire(Enum.InputType.Keyboard, Enum.KeyCode.E, true)
-        task.wait(0.5)
-        uis.InputEnded:Fire(Enum.InputType.Keyboard, Enum.KeyCode.E, true)
+        game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("E", "All")
         task.wait(0.5)
     end
 end
@@ -105,7 +103,7 @@ button.MouseButton1Click:Connect(function()
 
         -- Start movement in circles with joystick style and key spamming abilities
         local centerPosition = humanoidRootPart.Position -- The starting point for the circle
-        local radius = 100  -- Set a radius of 3 meters
+        local radius = 100  -- Set a radius of 100 meters
         task.spawn(moveInCircles, centerPosition, radius)
         task.spawn(spamAbilities)
     else
