@@ -1,90 +1,100 @@
--- Create UI
-local player = game.Players.LocalPlayer
-local backpack = player:WaitForChild("Backpack")
-local UIS = game:GetService("User InputService")
-
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player:WaitForChild("PlayerGui")
-screenGui.Name = "FarmingUI"
-
-local mainFrame = Instance.new("Frame")
-mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 300, 0, 150)
-mainFrame.Position = UDim2.new(0, 50, 0, 50)
-mainFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-mainFrame.Draggable = true
-mainFrame.Active = true
-
-local startButton = Instance.new("TextButton")
-startButton.Parent = mainFrame
-startButton.Size = UDim2.new(0, 200, 0, 50)
-startButton.Position = UDim2.new(0, 50, 0, 50)
-startButton.Text = "Start Auto Farming"
-startButton.BackgroundColor3 = Color3.fromRGB(120, 255, 120)
-
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Parent = mainFrame
-statusLabel.Size = UDim2.new(0, 200, 0, 30)
-statusLabel.Position = UDim2.new(0, 50, 0, 110)
-statusLabel.Text = "Status: Idle"
-statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
 local farming = false
-local angle = 0
-local radius = 100 -- Set radius to 100
-local speed = 1 -- Speed of rotation
+local position = Vector3.new(0, 5, 1) -- Position where you want the character to walk to
+local radius = 3 -- The radius of the circular movement
+local walkSpeed = 16 -- Adjust this to change the walking speed
 
--- Function to equip the Hellfire Sword
-local function equipHellfireSword()
-    local sword = backpack:FindFirstChild("Hellfire")
-    if sword then
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local backpack = player.Backpack
+
+local hellfireSword = backpack:FindFirstChild("Hellfire")
+
+-- Function to Equip the Sword
+local function equipSword()
+    if hellfireSword then
+        local sword = hellfireSword:Clone()
+        sword.Parent = char
+        sword.Handle.Anchored = false
         humanoid:EquipTool(sword)
     else
-        print("Hellfire sword not found in backpack!")
+        print("Hellfire Sword not found!")
     end
 end
 
--- Function to move in circles around a position
-local function moveInCircles()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-    local hrp = character:WaitForChild("HumanoidRootPart")
-    
-    -- Define the center position to move around
-    local centerPosition = hrp.Position
+-- Function to Perform the Abilities
+local function useAbilities()
+    if char and char:FindFirstChild("Hellfire") then
+        local sword = char.Hellfire
+        local wrath = sword:FindFirstChild("wrath")
+        local over = sword:FindFirstChild("over")
+        
+        if wrath and over then
+            wrath:Fire() -- Example usage, update with actual function if needed
+            over:Fire() -- Example usage, update with actual function if needed
+        end
+    end
+end
 
+-- Walking Function
+local function walkInCircle()
     while farming do
-        -- Calculate new target position in a circle
-        local x = math.cos(angle) * radius + centerPosition.X
-        local z = math.sin(angle) * radius + centerPosition.Z
-        local targetPosition = Vector3.new(x, centerPosition.Y, z)
-
-        -- Move towards the target position
-        humanoid:MoveTo(targetPosition)
-
-        -- Update angle for the next position
-        angle = angle + math.rad(speed)
-
-        wait(0.1) -- Adjust the wait time for smooth movement
+        local angle = tick() * 2 * math.pi / 3 -- Adjust the speed of circle
+        local newPosition = position + Vector3.new(math.sin(angle) * radius, 0, math.cos(angle) * radius)
+        humanoid:MoveTo(newPosition)
+        task.wait(0.1)
     end
 end
 
--- UI Button Toggle
-startButton.MouseButton1Click:Connect(function()
+-- Create the UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player.PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0, 10, 0, 10)
+button.Text = "Enable Auto Farm"
+button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+button.Parent = frame
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(0, 200, 0, 50)
+statusLabel.Position = UDim2.new(0, 10, 0, 70)
+statusLabel.Text = "Status: Idle"
+statusLabel.Parent = frame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 50)
+closeButton.Position = UDim2.new(0, 160, 0, 10)
+closeButton.Text = "X"
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.Parent = frame
+
+-- Toggle Button Function
+button.MouseButton1Click:Connect(function()
     farming = not farming
+    
     if farming then
-        startButton.Text = "Stop Auto Farming"
+        button.Text = "Disable Auto Farm"
         statusLabel.Text = "Status: Farming"
-        equipHellfireSword() -- Equip the sword when starting
-        task.spawn(moveInCircles)  -- Start the movement
+        task.spawn(function()
+            walkInCircle() -- Start walking in circles
+        end)
+        equipSword() -- Equip the sword when farming starts
+        useAbilities() -- Use abilities after equipping the sword
     else
-        startButton.Text = "Start Auto Farming"
+        button.Text = "Enable Auto Farm"
         statusLabel.Text = "Status: Idle"
     end
 end)
 
--- Ensure the UI is visible
-screenGui.Enabled = true
+-- Close the UI when X is clicked
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy() -- Remove the UI
+end)
