@@ -1,9 +1,11 @@
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
-local uis = game:GetService("UserInputService")
+local humanoidRootPart
+local humanoid
+local moving = false
+local radius = 5
+local angle = 0
 
+-- UI Setup
 local screenGui = Instance.new("ScreenGui", game.CoreGui)
 local frame = Instance.new("Frame", screenGui)
 frame.Size = UDim2.new(0, 250, 0, 100)
@@ -24,7 +26,6 @@ button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
 button.TextColor3 = Color3.fromRGB(180, 100, 255)
 button.Font = Enum.Font.SourceSansBold
 button.TextSize = 18
-button.Parent = frame
 
 local statusLabel = Instance.new("TextLabel", frame)
 statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
@@ -34,28 +35,29 @@ statusLabel.BackgroundTransparency = 1
 statusLabel.TextColor3 = Color3.fromRGB(200, 150, 255)
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextSize = 16
+
+button.Parent = frame
 statusLabel.Parent = frame
 
-local moving = false
-
+-- Move in Circles Function
 local function moveInCircles()
-    local radius = 5
-    local speed = 3
-    local angle = 0
-
-    while moving do
+    while moving and humanoidRootPart do
         local x = math.cos(angle) * radius
         local z = math.sin(angle) * radius
-        humanoid:MoveTo(Vector3.new(-0 + x, 5, 1 + z))
-
-        angle = angle + (speed * 0.1)
+        local moveToPosition = Vector3.new(-0 + x, 5, 1 + z)
+        
+        humanoid:MoveTo(moveToPosition)
+        
+        angle = angle + 0.1
         if angle >= math.pi * 2 then
             angle = 0
         end
-        task.wait(0.1)
+        
+        task.wait(0.3) -- Adjust speed
     end
 end
 
+-- Equip Item Function
 local function equipItem()
     local backpack = player:FindFirstChild("Backpack")
     if backpack then
@@ -66,7 +68,9 @@ local function equipItem()
     end
 end
 
+-- Spam Abilities
 local function spamAbilities()
+    local uis = game:GetService("UserInputService")
     while moving do
         uis:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
         task.wait(0.5)
@@ -79,15 +83,16 @@ local function spamAbilities()
     end
 end
 
+-- Detect Character Respawn & Equip Item
 player.CharacterAdded:Connect(function(newCharacter)
-    character = newCharacter
-    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    humanoid = character:WaitForChild("Humanoid")
+    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    humanoid = newCharacter:WaitForChild("Humanoid")
     
     task.wait(1)
     equipItem()
 end)
 
+-- Button Toggle for Movement
 button.MouseButton1Click:Connect(function()
     moving = not moving
 
@@ -96,9 +101,11 @@ button.MouseButton1Click:Connect(function()
         button.BackgroundColor3 = Color3.fromRGB(120, 50, 255)
         statusLabel.Text = "Status: Moving"
 
-        humanoid:MoveTo(Vector3.new(-0, 5, 1))
-        task.spawn(moveInCircles)
-        task.spawn(spamAbilities)
+        if humanoidRootPart then
+            humanoid:MoveTo(Vector3.new(-0, 5, 1))
+            task.spawn(moveInCircles)
+            task.spawn(spamAbilities)
+        end
     else
         button.Text = "ENABLE MOVEMENT"
         button.BackgroundColor3 = Color3.fromRGB(50, 50, 150)
