@@ -1,104 +1,106 @@
--- Create UI
 local player = game.Players.LocalPlayer
-local screenGui = Instance.new("ScreenGui", player.PlayerGui)
-screenGui.Name = "AutoFarmUI"
+local backpack = player.Backpack
+local UIS = game:GetService("UserInputService")
+local mouse = player:GetMouse()
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0, 0, 0, 0)
-button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Parent = screenGui
+-- UI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.Name = "FarmingUI"
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Parent = screenGui
+mainFrame.Size = UDim2.new(0, 300, 0, 150)
+mainFrame.Position = UDim2.new(0, 50, 0, 50)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+mainFrame.Draggable = true
+mainFrame.Active = true
+
+local startButton = Instance.new("TextButton")
+startButton.Parent = mainFrame
+startButton.Size = UDim2.new(0, 200, 0, 50)
+startButton.Position = UDim2.new(0, 50, 0, 50)
+startButton.Text = "Start Auto Farming"
+startButton.BackgroundColor3 = Color3.fromRGB(120, 255, 120)
 
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(0, 200, 0, 50)
-statusLabel.Position = UDim2.new(0, 0, 0, 60)
+statusLabel.Parent = mainFrame
+statusLabel.Size = UDim2.new(0, 200, 0, 30)
+statusLabel.Position = UDim2.new(0, 50, 0, 110)
 statusLabel.Text = "Status: Idle"
 statusLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-statusLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-statusLabel.Parent = screenGui
 
--- Target position
-local targetPosition = Vector3.new(0, 5, 1) -- The initial target position
-local radius = 100 -- Radius for walking in circles
-local walkingSpeed = 16 -- Speed of walking, change if needed
-
--- Sword and Abilities
-local sword = player.Backpack:WaitForChild("Hellfire")
-local wrathAbility = sword:WaitForChild("wrath")
-local overAbility = sword:WaitForChild("over")
-
--- Function to Equip Sword
-local function equipSword()
-    local swordItem = player.Backpack:FindFirstChild("Hellfire")
-    if swordItem then
-        swordItem.Parent = player.Character
-    end
-end
-
--- Walk in Circle Function
-local function walkInCircle()
-    local angle = 0
-    while true do
-        angle = angle + math.pi / 50
-        local x = targetPosition.X + radius * math.cos(angle)
-        local z = targetPosition.Z + radius * math.sin(angle)
-
-        -- Set character position
-        local character = player.Character
-        local humanoid = character:WaitForChild("Humanoid")
-        local targetPos = Vector3.new(x, targetPosition.Y, z)
-        
-        humanoid:MoveTo(targetPos)
-        
-        wait(0.1) -- Adjust if you want smoother movement
-    end
-end
-
--- Keybinds for Abilities (Q and E)
-local function useAbilities()
-    while true do
-        -- Use Q and E
-        game:GetService("UserInputService"):SendKeyEvent(true, Enum.KeyCode.Q, false, game)
-        wait(1)
-        game:GetService("UserInputService"):SendKeyEvent(false, Enum.KeyCode.Q, false, game)
-        
-        wait(1)
-
-        game:GetService("UserInputService"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
-        wait(1)
-        game:GetService("UserInputService"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
-        
-        wait(2) -- Delay for 2 seconds before using the abilities again
-    end
-end
-
--- Button Toggle Auto Farm
 local farming = false
-button.MouseButton1Click:Connect(function()
-    farming = not farming
 
-    if farming then
-        button.Text = "DISABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
-        statusLabel.Text = "Status: Farming"
-        
-        -- Equip sword and start walking
-        equipSword()
-        task.spawn(walkInCircle)
-        task.spawn(useAbilities)
-    else
-        button.Text = "ENABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green
-        statusLabel.Text = "Status: Idle"
+-- Function to click keybinds
+local function pressKey(key)
+    local input = Instance.new("InputObject")
+    input.UserInputType = Enum.UserInputType.Keyboard
+    input.KeyCode = key
+    UIS.InputBegan:Fire(input)
+end
+
+-- Function to move in circles around a position
+local function moveInCircles()
+    local position = Vector3.new(0, 5, 1)
+    local radius = 100
+    local speed = 1
+    local angle = 0
+
+    while farming do
+        local x = math.cos(angle) * radius + position.X
+        local z = math.sin(angle) * radius + position.Z
+        player.Character:MoveTo(Vector3.new(x, position.Y, z))
+        angle = angle + math.rad(speed)
+        wait(0.1)
     end
-end)
+end
 
--- Handle Death and Auto-Equip Sword
-game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    local backpack = game.Players.LocalPlayer.Backpack
-    if backpack:FindFirstChild("Hellfire") then
-        equipSword() -- Re-equip the sword after death
+-- Equip Hellfire Sword
+local function equipHellfireSword()
+    for _, item in pairs(backpack:GetChildren()) do
+        if item.Name == "Hellfire" then
+            player.Character:WaitForChild("Humanoid"):EquipTool(item)
+            break
+        end
+    end
+end
+
+-- Auto farm actions
+local function autoFarm()
+    while farming do
+        -- Equip Sword
+        equipHellfireSword()
+
+        -- Use abilities
+        if player.Character:FindFirstChild("Hellfire") then
+            local sword = player.Character.Hellfire
+            if sword:FindFirstChild("over") then
+                sword.over:Activate()
+            end
+            if sword:FindFirstChild("wrath") then
+                sword.wrath:Activate()
+            end
+        end
+
+        -- Press Q and E keybinds
+        pressKey(Enum.KeyCode.Q)
+        pressKey(Enum.KeyCode.E)
+        
+        wait(2) -- Wait before using abilities again
+    end
+end
+
+-- UI Button Toggle
+startButton.MouseButton1Click:Connect(function()
+    farming = not farming
+    if farming then
+        startButton.Text = "Stop Auto Farming"
+        statusLabel.Text = "Status: Farming"
+        moveInCircles()
+        autoFarm()
+    else
+        startButton.Text = "Start Auto Farming"
+        statusLabel.Text = "Status: Idle"
     end
 end)
