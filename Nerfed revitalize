@@ -1,39 +1,31 @@
 local player = game.Players.LocalPlayer
 
--- UI Setup
-local screenGui = Instance.new("ScreenGui", game.CoreGui)
-local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 250, 0, 100)
-frame.Position = UDim2.new(0.5, -125, 0.2, 0)
-frame.BackgroundColor3 = Color3.fromRGB(20, 30, 20) -- Dark Green Background
-frame.BorderSizePixel = 2
-frame.Active = true
-frame.Draggable = true
+-- UI Setup (Keep your original UI here)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
 
-local uiGlow = Instance.new("UIStroke", frame)
-uiGlow.Color = Color3.fromRGB(100, 255, 100) -- Neon Green Glow
-uiGlow.Thickness = 3
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green
+Frame.Parent = ScreenGui
+Frame.Active = true
+Frame.Draggable = true -- Make UI draggable
 
-local button = Instance.new("TextButton", frame)
+local button = Instance.new("TextButton")
 button.Size = UDim2.new(1, 0, 0.5, 0)
+button.Position = UDim2.new(0, 0, 0, 0)
 button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green Button
-button.TextColor3 = Color3.fromRGB(180, 255, 180) -- Light Green Text
-button.Font = Enum.Font.SourceSansBold
-button.TextSize = 18
-button.Parent = frame
+button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
+button.Parent = Frame
 
-local statusLabel = Instance.new("TextLabel", frame)
+local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
 statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
 statusLabel.Text = "Status: Idle"
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.BackgroundTransparency = 1
-statusLabel.TextColor3 = Color3.fromRGB(200, 255, 200) -- Light Green Text
-statusLabel.Font = Enum.Font.SourceSansBold
-statusLabel.TextSize = 16
-statusLabel.Parent = frame
-
-local farming = false
+statusLabel.Parent = Frame
 
 -- Excluded ClickDetectors
 local excludedNames = {
@@ -44,35 +36,33 @@ local excludedNames = {
 
 local function isExcluded(clickDetector)
     for _, name in pairs(excludedNames) do
-        if clickDetector.Name:lower() == name then
+        if clickDetector.Parent and clickDetector.Parent.Name:lower() == name then
             return true
         end
     end
     return false
 end
 
--- Function to Click ClickDetectors at a Slower Rate
+-- Function to Click All ClickDetectors in Dynamic Folders
+local farming = false
+
 local function clickAllDetectors()
     while farming do
-        local clicks = 0
         for _, obj in pairs(workspace:GetChildren()) do
             if obj:IsA("Folder") then
                 for _, item in pairs(obj:GetChildren()) do
                     if item:IsA("Model") or item:IsA("Part") then
                         local detector = item:FindFirstChildWhichIsA("ClickDetector")
                         if detector and not isExcluded(detector) then
-                            fireclickdetector(detector)
-                            clicks = clicks + 1
-                            if clicks >= 5 then
-                                task.wait(2) -- 5 clicks per 2 seconds
-                                clicks = 0
+                            for i = 1, 5 do
+                                fireclickdetector(detector)
                             end
                         end
                     end
                 end
             end
         end
-        task.wait(0.1) -- Small delay before scanning again
+        task.wait(2) -- 5 clicks every 2 seconds
     end
 end
 
