@@ -1,69 +1,73 @@
 local farming = false
-local position = Vector3.new(0, 5, 1) -- Position where you want the character to walk to
-local radius = 100 -- The radius of the circular movement (100 units)
-local walkSpeed = 16 -- Adjust this to change the walking speed
+local position = Vector3.new(0, 5, 1) -- Target position
+local radius = 100 -- Movement radius
+local walkSpeed = 16 
 
 local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local humanoid = char:WaitForChild("Humanoid")
-local backpack = player.Backpack
+local humanoid = player.Character and player.Character:FindFirstChild("Humanoid") or nil
+local backpack = player:FindFirstChild("Backpack")
 
 -- Function to Equip the Sword
 local function equipSword()
+    repeat task.wait() until backpack
     local sword = backpack:FindFirstChild("Hellfire")
     if sword then
-        -- Equip the actual sword directly from the backpack
         humanoid:EquipTool(sword)
-    else
-        print("Hellfire Sword not found!")
     end
 end
 
 -- Function to Trigger the Sword's Abilities
 local function triggerAbilities()
-    local sword = backpack:FindFirstChild("Hellfire")
-    if sword then
-        local overAbility = sword:FindFirstChild("over")
-        local wrathAbility = sword:FindFirstChild("wrath")
-        
-        if overAbility and wrathAbility then
-            -- Simulate pressing the abilities every 2 seconds
-            while farming do
-                overAbility:Activate() -- Trigger the over ability
-                wrathAbility:Activate() -- Trigger the wrath ability
-                wait(2) -- Wait for 2 seconds before using the abilities again
+    while farming do
+        local sword = player.Character and player.Character:FindFirstChild("Hellfire")
+        if sword then
+            local overAbility = sword:FindFirstChild("over")
+            local wrathAbility = sword:FindFirstChild("wrath")
+            if overAbility and wrathAbility then
+                overAbility:Activate()
+                wrathAbility:Activate()
             end
-        else
-            print("Abilities not found on Hellfire Sword!")
         end
-    else
-        print("Hellfire Sword not found!")
+        task.wait(2) -- Activates abilities every 2 seconds
     end
 end
 
--- Walking Function in a 100 Unit Radius
+-- Walking in a Circular Path
 local function walkInCircle()
     while farming do
-        -- Calculate a new position based on a 100-unit radius around the original point
-        local angle = tick() * 2 * math.pi / 3 -- Adjust the speed of circle (change 3 for faster/slower)
+        local angle = tick() * 2 * math.pi / 3
         local newPosition = position + Vector3.new(math.sin(angle) * radius, 0, math.cos(angle) * radius)
-        
-        -- Ensure the humanoid is moving to the new position
         humanoid:MoveTo(newPosition)
-        
         task.wait(0.1)
     end
 end
 
--- Create the UI
+-- Ensure UI & Script Continues After Death
+local function onRespawn()
+    player.CharacterAdded:Connect(function(character)
+        humanoid = character:WaitForChild("Humanoid")
+        backpack = player:FindFirstChild("Backpack")
+        task.wait(1) -- Small delay for backpack to load
+
+        equipSword()
+        farming = true
+        task.spawn(triggerAbilities)
+        task.spawn(walkInCircle)
+    end)
+end
+onRespawn()
+
+-- UI Setup
 local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = player.PlayerGui
+screenGui.Parent = game:GetService("CoreGui") -- UI now stays after death
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 200, 0, 150)
 frame.Position = UDim2.new(0, 10, 0, 10)
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 frame.Parent = screenGui
+frame.Active = true
+frame.Draggable = true -- UI can now be moved
 
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 200, 0, 50)
@@ -85,44 +89,16 @@ closeButton.Text = "X"
 closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 closeButton.Parent = frame
 
--- Dragging logic
-local dragging = false
-local dragInput, dragStart, startPos
-
-frame.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-    end
-end)
-
-frame.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- Toggle Button Function
+-- Toggle Auto Farm
 button.MouseButton1Click:Connect(function()
     farming = not farming
     
     if farming then
         button.Text = "Disable Auto Farm"
         statusLabel.Text = "Status: Farming"
-        task.spawn(function()
-            equipSword() -- Equip the sword when farming starts
-            triggerAbilities() -- Start triggering the abilities
-            walkInCircle() -- Start walking in circles
-        end)
+        task.spawn(equipSword)
+        task.spawn(triggerAbilities)
+        task.spawn(walkInCircle)
     else
         button.Text = "Enable Auto Farm"
         statusLabel.Text = "Status: Idle"
@@ -131,14 +107,5 @@ end)
 
 -- Close the UI when X is clicked
 closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy() -- Remove the UI
-end)
-
--- Ensure the script continues after death
-player.CharacterAdded:Connect(function(character)
-    char = character
-    humanoid = char:WaitForChild("Humanoid")
-    equipSword() -- Re-equip the sword after respawn
-    walkInCircle() -- Continue walking after respawn
-    triggerAbilities() -- Continue abilities after respawn
+    screenGui:Destroy()
 end)
