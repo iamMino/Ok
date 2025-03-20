@@ -12,10 +12,30 @@ local backpack = player.Backpack
 local function equipSword()
     local sword = backpack:FindFirstChild("Hellfire")
     if sword then
-        -- Clone the sword to avoid modifying the backpack item directly
-        local clonedSword = sword:Clone()
-        clonedSword.Parent = char -- Put the sword in the character's inventory
-        humanoid:EquipTool(clonedSword) -- Equip the sword
+        -- Equip the actual sword directly from the backpack
+        humanoid:EquipTool(sword)
+    else
+        print("Hellfire Sword not found!")
+    end
+end
+
+-- Function to Trigger the Sword's Abilities
+local function triggerAbilities()
+    local sword = backpack:FindFirstChild("Hellfire")
+    if sword then
+        local overAbility = sword:FindFirstChild("over")
+        local wrathAbility = sword:FindFirstChild("wrath")
+        
+        if overAbility and wrathAbility then
+            -- Simulate pressing the abilities every 2 seconds
+            while farming do
+                overAbility:Activate() -- Trigger the over ability
+                wrathAbility:Activate() -- Trigger the wrath ability
+                wait(2) -- Wait for 2 seconds before using the abilities again
+            end
+        else
+            print("Abilities not found on Hellfire Sword!")
+        end
     else
         print("Hellfire Sword not found!")
     end
@@ -73,9 +93,10 @@ button.MouseButton1Click:Connect(function()
         button.Text = "Disable Auto Farm"
         statusLabel.Text = "Status: Farming"
         task.spawn(function()
+            equipSword() -- Equip the sword when farming starts
+            triggerAbilities() -- Start triggering the abilities
             walkInCircle() -- Start walking in circles
         end)
-        equipSword() -- Equip the sword when farming starts
     else
         button.Text = "Enable Auto Farm"
         statusLabel.Text = "Status: Idle"
