@@ -1,6 +1,6 @@
 local farming = false
 local position = Vector3.new(0, 5, 1) -- Position where you want the character to walk to
-local radius = 3 -- The radius of the circular movement
+local radius = 100 -- The radius of the circular movement (100 units)
 local walkSpeed = 16 -- Adjust this to change the walking speed
 
 local player = game.Players.LocalPlayer
@@ -36,7 +36,7 @@ local function useAbilities()
     end
 end
 
--- Walking Function
+-- Walking Function in a 100 Unit Radius
 local function walkInCircle()
     while farming do
         local angle = tick() * 2 * math.pi / 3 -- Adjust the speed of circle
