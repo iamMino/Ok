@@ -8,40 +8,29 @@ local char = player.Character or player.CharacterAdded:Wait()
 local humanoid = char:WaitForChild("Humanoid")
 local backpack = player.Backpack
 
-local hellfireSword = backpack:FindFirstChild("Hellfire")
-
 -- Function to Equip the Sword
 local function equipSword()
-    if hellfireSword then
-        local sword = hellfireSword:Clone()
-        sword.Parent = char
-        sword.Handle.Anchored = false
-        humanoid:EquipTool(sword)
+    local sword = backpack:FindFirstChild("Hellfire")
+    if sword then
+        -- Clone the sword to avoid modifying the backpack item directly
+        local clonedSword = sword:Clone()
+        clonedSword.Parent = char -- Put the sword in the character's inventory
+        humanoid:EquipTool(clonedSword) -- Equip the sword
     else
         print("Hellfire Sword not found!")
-    end
-end
-
--- Function to Perform the Abilities
-local function useAbilities()
-    if char and char:FindFirstChild("Hellfire") then
-        local sword = char.Hellfire
-        local wrath = sword:FindFirstChild("wrath")
-        local over = sword:FindFirstChild("over")
-        
-        if wrath and over then
-            wrath:Fire() -- Example usage, update with actual function if needed
-            over:Fire() -- Example usage, update with actual function if needed
-        end
     end
 end
 
 -- Walking Function in a 100 Unit Radius
 local function walkInCircle()
     while farming do
-        local angle = tick() * 2 * math.pi / 3 -- Adjust the speed of circle
+        -- Calculate a new position based on a 100-unit radius around the original point
+        local angle = tick() * 2 * math.pi / 3 -- Adjust the speed of circle (change 3 for faster/slower)
         local newPosition = position + Vector3.new(math.sin(angle) * radius, 0, math.cos(angle) * radius)
+        
+        -- Ensure the humanoid is moving to the new position
         humanoid:MoveTo(newPosition)
+        
         task.wait(0.1)
     end
 end
@@ -87,7 +76,6 @@ button.MouseButton1Click:Connect(function()
             walkInCircle() -- Start walking in circles
         end)
         equipSword() -- Equip the sword when farming starts
-        useAbilities() -- Use abilities after equipping the sword
     else
         button.Text = "Enable Auto Farm"
         statusLabel.Text = "Status: Idle"
