@@ -1,0 +1,53 @@
+-- Create UI
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local Button = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = game:GetService("CoreGui")
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Blue UI
+Frame.Size = UDim2.new(0, 200, 0, 100)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+Frame.Draggable = true
+Frame.Active = true
+
+Button.Parent = Frame
+Button.Size = UDim2.new(1, 0, 0.5, 0)
+Button.Text = "ENABLE AUTO FARM"
+Button.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+
+StatusLabel.Parent = Frame
+StatusLabel.Size = UDim2.new(1, 0, 0.5, 0)
+StatusLabel.Position = UDim2.new(0, 0, 0.5, 0)
+StatusLabel.Text = "Status: Idle"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+StatusLabel.BackgroundTransparency = 1
+
+-- ClickDetector Farming Logic
+local farming = false
+
+local function clickAllDetectors()
+    while farming do
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("ClickDetector") then
+                fireclickdetector(obj)
+            end
+        end
+        task.wait() -- Maximum speed
+    end
+end
+
+-- Button Toggle
+Button.MouseButton1Click:Connect(function()
+    farming = not farming
+    if farming then
+        Button.Text = "DISABLE AUTO FARM"
+        StatusLabel.Text = "Status: Farming"
+        task.spawn(clickAllDetectors)
+    else
+        Button.Text = "ENABLE AUTO FARM"
+        StatusLabel.Text = "Status: Idle"
+    end
+end)
