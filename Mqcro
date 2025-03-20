@@ -85,6 +85,32 @@ closeButton.Text = "X"
 closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 closeButton.Parent = frame
 
+-- Dragging logic
+local dragging = false
+local dragInput, dragStart, startPos
+
+frame.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
 -- Toggle Button Function
 button.MouseButton1Click:Connect(function()
     farming = not farming
@@ -106,4 +132,13 @@ end)
 -- Close the UI when X is clicked
 closeButton.MouseButton1Click:Connect(function()
     screenGui:Destroy() -- Remove the UI
+end)
+
+-- Ensure the script continues after death
+player.CharacterAdded:Connect(function(character)
+    char = character
+    humanoid = char:WaitForChild("Humanoid")
+    equipSword() -- Re-equip the sword after respawn
+    walkInCircle() -- Continue walking after respawn
+    triggerAbilities() -- Continue abilities after respawn
 end)
