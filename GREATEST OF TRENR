@@ -30,12 +30,14 @@ local farming = true
 
 local function clickAllDetectors()
     while farming do
-        for _, obj in pairs(workspace:GetDescendants()) do
+        for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("ClickDetector") then
-                fireclickdetector(obj)
+                pcall(function()
+                    fireclickdetector(obj)
+                end)
             end
         end
-        task.wait() -- Maximum speed
+        task.wait(0) -- No delay for max speed
     end
 end
 
