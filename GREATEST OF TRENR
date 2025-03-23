@@ -30,16 +30,17 @@ local farming = true
 
 local function clickAllDetectors()
     while farming do
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("ClickDetector") and obj.Parent and obj.Parent:IsA("Part") then
-                pcall(function()
-                    fireclickdetector(obj, 1) -- Ensure it actually fires the click
-                end)
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("ClickDetector") then
+                fireclickdetector(obj)
             end
         end
-        task.wait(0) -- No delay for max speed
+        task.wait() -- Maximum speed
     end
 end
+
+-- Auto-enable on execution
+task.spawn(clickAllDetectors)
 
 -- Button Toggle
 Button.MouseButton1Click:Connect(function()
@@ -53,6 +54,3 @@ Button.MouseButton1Click:Connect(function()
         StatusLabel.Text = "Status: Idle"
     end
 end)
-
--- Auto-enable on execution
-task.spawn(clickAllDetectors)
