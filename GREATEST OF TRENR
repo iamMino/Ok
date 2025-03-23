@@ -31,9 +31,9 @@ local farming = true
 local function clickAllDetectors()
     while farming do
         for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("ClickDetector") then
+            if obj:IsA("ClickDetector") and obj.Parent and obj.Parent:IsA("Part") then
                 pcall(function()
-                    fireclickdetector(obj)
+                    fireclickdetector(obj, 1) -- Ensure it actually fires the click
                 end)
             end
         end
