@@ -15,18 +15,18 @@ Frame.Active = true
 
 Button.Parent = Frame
 Button.Size = UDim2.new(1, 0, 0.5, 0)
-Button.Text = "ENABLE AUTO FARM"
+Button.Text = "DISABLE AUTO FARM"
 Button.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
 
 StatusLabel.Parent = Frame
 StatusLabel.Size = UDim2.new(1, 0, 0.5, 0)
 StatusLabel.Position = UDim2.new(0, 0, 0.5, 0)
-StatusLabel.Text = "Status: Idle"
+StatusLabel.Text = "Status: Farming"
 StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 StatusLabel.BackgroundTransparency = 1
 
 -- ClickDetector Farming Logic
-local farming = false
+local farming = true
 
 local function clickAllDetectors()
     while farming do
@@ -51,3 +51,6 @@ Button.MouseButton1Click:Connect(function()
         StatusLabel.Text = "Status: Idle"
     end
 end)
+
+-- Auto-enable on execution
+task.spawn(clickAllDetectors)
