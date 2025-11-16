@@ -1,0 +1,117 @@
+--// GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Frame = Instance.new("Frame", ScreenGui)
+local Button = Instance.new("TextButton", Frame)
+local Drag = Instance.new("TextButton", Frame)
+
+Frame.Size = UDim2.new(0, 180, 0, 80)
+Frame.Position = UDim2.new(0.1, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Active = true
+
+Button.Size = UDim2.new(0, 160, 0, 35)
+Button.Position = UDim2.new(0, 10, 0, 35)
+Button.Text = "Start Auto TP"
+Button.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+Button.TextColor3 = Color3.new(1,1,1)
+Button.Font = Enum.Font.SourceSansBold
+Button.TextSize = 18
+
+Drag.Size = UDim2.new(0, 160, 0, 30)
+Drag.Position = UDim2.new(0, 10, 0, 2)
+Drag.Text = "Drag"
+Drag.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Drag.TextColor3 = Color3.new(1,1,1)
+Drag.Font = Enum.Font.SourceSansBold
+Drag.TextSize = 18
+
+--// Dragging
+local UIS = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+Drag.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Drag.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+--// Function to get HRP even after death
+local player = game.Players.LocalPlayer
+local function getRoot()
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    return hrp
+end
+
+-- Auto-update HRP after respawn
+local root = getRoot()
+player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    root = getRoot()
+end)
+
+--// Teleport logic
+local active = false
+
+local function tp(part)
+    if root then
+        root.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+    end
+end
+
+local function scan()
+    for _, child in ipairs(workspace:GetChildren()) do
+        if active and child:FindFirstChild("Part") then
+            tp(child.Part)
+        end
+    end
+end
+
+-- Detect new spawns
+workspace.ChildAdded:Connect(function(child)
+    if active then
+        task.wait(0.05)
+        if child:FindFirstChild("Part") then
+            tp(child.Part)
+        end
+    end
+end)
+
+-- Start/Stop button
+Button.MouseButton1Click:Connect(function()
+    active = not active
+    Button.Text = active and "Auto TP: ON" or "Auto TP: OFF"
+    Button.BackgroundColor3 = active and Color3.fromRGB(200, 60, 60) or Color3.fromRGB(50, 180, 50)
+
+    if active then
+        while active do
+            root = getRoot() -- always update in case of death
+            scan()
+            task.wait(0.2)
+        end
+    end
+end)
