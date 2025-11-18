@@ -1,16 +1,99 @@
--- script by himrng (omgamlookyou4)
+--[[ 
+    SAFE FAST CLICKER GUI (Sanses)
+    Fast but will NOT crash your game
+--]]
 
-while true do
-    task.wait() -- minimal yield to avoid instant kick
-    local sanses = workspace:FindFirstChild("Sanses")
-    if sanses then
-        for _, obj in pairs(sanses:GetDescendants()) do
-            if obj:IsA("ClickDetector") then
-                fireclickdetector(obj)
-                task.wait(0) -- absolute fastest possible safe yield
+-- GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Frame = Instance.new("Frame", ScreenGui)
+local Button = Instance.new("TextButton", Frame)
+local Drag = Instance.new("TextButton", Frame)
+
+Frame.Size = UDim2.new(0, 180, 0, 80)
+Frame.Position = UDim2.new(0.1, 0, 0.3, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Active = true
+
+Button.Size = UDim2.new(0, 160, 0, 35)
+Button.Position = UDim2.new(0, 10, 0, 35)
+Button.Text = "Start Auto Click"
+Button.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+Button.TextColor3 = Color3.new(1,1,1)
+Button.Font = Enum.Font.SourceSansBold
+Button.TextSize = 18
+
+Drag.Size = UDim2.new(0, 160, 0, 30)
+Drag.Position = UDim2.new(0, 10, 0, 2)
+Drag.Text = "Drag"
+Drag.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Drag.TextColor3 = Color3.new(1,1,1)
+Drag.Font = Enum.Font.SourceSansBold
+Drag.TextSize = 18
+
+-- Dragging
+local UIS = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+Drag.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
             end
-        end
+        end)
     end
+end)
+
+Drag.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- Safe-fast click logic
+local running = false
+
+local function clickLoop()
+    task.spawn(function()
+        while running do
+            local folder = workspace:FindFirstChild("Sanses")
+            if folder then
+                for _, obj in ipairs(folder:GetDescendants()) do
+                    if obj:IsA("ClickDetector") then
+                        fireclickdetector(obj)
+                    end
+                end
+            end
+
+            task.wait(0.01) -- ⭐ SAFE SPEED (still very fast)
+        end
+    end)
 end
 
--- script by himrng (omgamlookyou4)
+-- Toggle button
+Button.MouseButton1Click:Connect(function()
+    running = not running
+
+    if running then
+        Button.Text = "Auto Click: ON"
+        Button.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+        clickLoop()
+    else
+        Button.Text = "Auto Click: OFF"
+        Button.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+    end
+end)
