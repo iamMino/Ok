@@ -1,83 +1,187 @@
-local player = game.Players.LocalPlayer
+-- Only execute in a Roblox exploit environment
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
 
--- UI Setup (Keep your original UI here)
+-- Clean up any old instances of this GUI if it's rerun
+local existingGui = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("AutofarmGui")
+if existingGui then existingGui:Destroy() end
+
+-- Create UI Elements
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
+local MainFrame = Instance.new("Frame")
+local TitleLabel = Instance.new("TextLabel")
+local ToggleButton = Instance.new("TextButton")
+local Corner = Instance.new("UICorner")
+local ButtonCorner = Instance.new("UICorner")
+local Stroke = Instance.new("UIStroke")
+local ButtonStroke = Instance.new("UIStroke")
 
-local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 100)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-Frame.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green
-Frame.Parent = ScreenGui
-Frame.Active = true
-Frame.Draggable = true -- Make UI draggable
+-- Show/Hide UI Toggle Button
+local MenuToggleBtn = Instance.new("TextButton")
+local MenuToggleCorner = Instance.new("UICorner")
+local MenuToggleStroke = Instance.new("UIStroke")
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(1, 0, 0.5, 0)
-button.Position = UDim2.new(0, 0, 0, 0)
-button.Text = "ENABLE AUTO FARM"
-button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
-button.Parent = Frame
+-- Configure ScreenGui
+ScreenGui.Name = "AutofarmGui"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
 
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0.5, 0)
-statusLabel.Position = UDim2.new(0, 0, 0.5, 0)
-statusLabel.Text = "Status: Idle"
-statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Parent = Frame
+-- FUTURISTIC MAIN FRAME (Bigger, Dark Cyber Theme)
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 320, 0, 160) -- Bigger size
+MainFrame.Position = UDim2.new(0.5, -160, 0.4, -80)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 18, 24) -- Deep sci-fi slate blue/gray
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Visible = true
+MainFrame.Parent = ScreenGui
 
--- Excluded ClickDetectors
-local excludedNames = {
-    "shrinetrigger",
-    "box",
-    "openshop"
-}
+Corner.CornerRadius = UDim.new(0, 12)
+Corner.Parent = MainFrame
 
-local function isExcluded(clickDetector)
-    for _, name in pairs(excludedNames) do
-        if clickDetector.Parent and clickDetector.Parent.Name:lower() == name then
-            return true
-        end
+-- Neon Blue Outer Glow/Border
+Stroke.Thickness = 2
+Stroke.Color = Color3.fromRGB(0, 180, 255) -- Cyber Blue
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Parent = MainFrame
+
+-- FUTURISTIC TITLE
+TitleLabel.Size = UDim2.new(1, 0, 0, 55)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "A U T O F A R M" -- Spaced out futuristic font styling
+TitleLabel.TextColor3 = Color3.fromRGB(0, 220, 255)
+TitleLabel.TextSize = 22
+TitleLabel.Parent = MainFrame
+
+-- MODERN TOGGLE BUTTON ("on" / "on switch")
+ToggleButton.Size = UDim2.new(0, 260, 0, 45) -- Bigger button
+ToggleButton.Position = UDim2.new(0.5, -130, 0, 80)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 30, 40) -- Dark sleek idle
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Text = "on switch"
+ToggleButton.TextColor3 = Color3.fromRGB(150, 160, 175) -- Dull gray-blue when off
+ToggleButton.TextSize = 16
+ToggleButton.Parent = MainFrame
+
+ButtonCorner.CornerRadius = UDim.new(0, 8)
+ButtonCorner.Parent = ToggleButton
+
+ButtonStroke.Thickness = 1.5
+ButtonStroke.Color = Color3.fromRGB(60, 70, 85) -- Subtle off-border
+ButtonStroke.Parent = ToggleButton
+
+-- MODERN SHOW/HIDE BUTTON (Futuristic Minimalist style)
+MenuToggleBtn.Name = "MenuToggleBtn"
+MenuToggleBtn.Size = UDim2.new(0, 100, 0, 35)
+MenuToggleBtn.Position = UDim2.new(0, 20, 0, 20)
+MenuToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 18, 24)
+MenuToggleBtn.Font = Enum.Font.GothamBold
+MenuToggleBtn.Text = "HIDE UI"
+MenuToggleBtn.TextColor3 = Color3.fromRGB(0, 180, 255)
+MenuToggleBtn.TextSize = 13
+MenuToggleBtn.Active = true
+MenuToggleBtn.Parent = ScreenGui
+
+MenuToggleCorner.CornerRadius = UDim.new(0, 8)
+MenuToggleCorner.Parent = MenuToggleBtn
+
+MenuToggleStroke.Thickness = 1.5
+MenuToggleStroke.Color = Color3.fromRGB(0, 180, 255)
+MenuToggleStroke.Parent = MenuToggleBtn
+
+-- Draggable Functionality 
+local function makeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
-    return false
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
 end
 
--- Function to Click All ClickDetectors in Dynamic Folders
-local farming = false
+makeDraggable(MainFrame)
+makeDraggable(MenuToggleBtn)
 
-local function clickAllDetectors()
-    while farming do
-        for _, obj in pairs(workspace:GetChildren()) do
-            if obj:IsA("Folder") then
-                for _, item in pairs(obj:GetChildren()) do
-                    if item:IsA("Model") or item:IsA("Part") then
-                        local detector = item:FindFirstChildWhichIsA("ClickDetector")
-                        if detector and not isExcluded(detector) then
-                            for i = 1, 5 do
-                                fireclickdetector(detector)
-                            end
-                        end
-                    end
-                end
+-- Show / Hide Toggle Logic
+MenuToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    if MainFrame.Visible then
+        MenuToggleBtn.Text = "HIDE UI"
+        MenuToggleBtn.TextColor3 = Color3.fromRGB(0, 180, 255)
+        MenuToggleStroke.Color = Color3.fromRGB(0, 180, 255)
+    else
+        MenuToggleBtn.Text = "SHOW UI"
+        MenuToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        MenuToggleStroke.Color = Color3.fromRGB(100, 110, 120) -- Fades to silver-gray when closed
+    end
+end)
+
+-- Autofarm Logic
+local autofarmEnabled = false
+
+local function fireClickDetectors()
+    for _, desc in ipairs(game:GetDescendants()) do
+        if desc:IsA("ClickDetector") then
+            if fireclickdetector then
+                fireclickdetector(desc)
+            else
+                desc:Interact(LocalPlayer) 
             end
         end
-        task.wait(2) -- 5 clicks every 2 seconds
     end
 end
 
--- Button Toggle Auto Farm
-button.MouseButton1Click:Connect(function()
-    farming = not farming
-
-    if farming then
-        button.Text = "DISABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(120, 255, 120) -- Bright Green
-        statusLabel.Text = "Status: Farming"
-        task.spawn(clickAllDetectors)
+-- Autofarm Switch Event (Changes theme dynamically on click)
+ToggleButton.MouseButton1Click:Connect(function()
+    autofarmEnabled = not autofarmEnabled
+    
+    if autofarmEnabled then
+        ToggleButton.Text = "on"
+        ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 110, 230) -- Neon Power Blue
+        ButtonStroke.Color = Color3.fromRGB(0, 220, 255)
     else
-        button.Text = "ENABLE AUTO FARM"
-        button.BackgroundColor3 = Color3.fromRGB(50, 150, 50) -- Dark Green
-        statusLabel.Text = "Status: Idle"
+        ToggleButton.Text = "on switch"
+        ToggleButton.TextColor3 = Color3.fromRGB(150, 160, 175)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 30, 40) -- Back to Sleek Dark Idle
+        ButtonStroke.Color = Color3.fromRGB(60, 70, 85)
+    end
+end)
+
+-- Continuous Loop
+task.spawn(function()
+    while true do
+        if autofarmEnabled then
+            pcall(fireClickDetectors)
+        end
+        task.wait(0.5)
     end
 end)
