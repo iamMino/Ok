@@ -337,41 +337,7 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
-                end
-                
-                egoQuestGrabbed = isEgoQuestActive()
-            else
-                egoQuestGrabbed = false
-                if giveQuests and giveQuests:IsA("RemoteEvent") then
-                    giveQuests:FireServer("VegetaChamber")
-                end
-                
-                local startWait = tick()
-                local waitDuration = getHumanizedWait()
-                while autoRoGActive and (tick() - startWait < waitDuration) do
-                    local checkEgo = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
-                    if checkEgo and checkEgo:FindFirstChild("Humanoid") and checkEgo.Humanoid.Health > 0 then
-                        cancelActivePrompts()
-                        break
-                    end
-                    task.wait(0.5)
-                end
-            end
-        else
-                    -- Bring TOP
-        if autoBringTopActive and not autoRoGActive then
-            local topBossesFolder = workspace:FindFirstChild("TOPBosses")
-            if topBossesFolder then
-                for _, boss in ipairs(topBossesFolder:GetChildren()) do
-                    if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
-                        if boss.Humanoid.Health > 0 then boss.HumanoidRootPart.CFrame = targetCFrame end
-                    end
-                end
-            end
-        end
-    end
-end)
--- PART 3: Helper Functions & Automation
+-- PART 3: Helper Functions & Automation (Fixed Anti-Crash)
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
