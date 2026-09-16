@@ -336,55 +336,9 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
--- PART 3: Helper Functions & Crash-Free Loops
+  -- PART 3: Helper Functions & Crash-Free Loops (UI CHECKS REMOVED)
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
-
--- Ultra lightweight prompt canceler (No GetDescendants spam)
-local function cancelActivePrompts()
-    pcall(function()
-        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
-        if not playerGui then return end
-        
-        for _, gui in ipairs(playerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "MasterHubUI" and gui.Name ~= "Chat" and gui.Name ~= "BubbleChat" then
-                for _, child in ipairs(gui:GetChildren()) do
-                    if (child:IsA("TextButton") or child:IsA("ImageButton")) and child.Visible then
-                        local btnText = child:IsA("TextButton") and child.Text:lower() or ""
-                        local btnName = child.Name:lower()
-                        if btnText:find("cancel") or btnText:find("close") or btnText:find("no") or btnName:find("cancel") then
-                            if firesignal then firesignal(child.MouseButton1Click) else child.Visible = false end
-                        end
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- Ultra lightweight quest text verifier
-local function isEgoQuestActive()
-    local active = false
-    pcall(function()
-        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
-        if not playerGui then return end
-        
-        for _, gui in ipairs(playerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "MasterHubUI" and gui.Name ~= "Chat" then
-                for _, child in ipairs(gui:GetChildren()) do
-                    if child:IsA("TextLabel") and child.Visible then
-                        local text = child.Text:lower()
-                        if text:find("destruction ki") or text:find("ultra ego") or text:find("vegetadestructionki") then
-                            active = true
-                            return
-                        end
-                    end
-                end
-            end
-        end
-    end)
-    return active
-end
 
 -- 1. Standard Auto Quest Loop
 task.spawn(function()
@@ -404,7 +358,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Realm of Gods Auto Farm Quest Controller
+-- 2. Realm of Gods Auto Farm (Stripped & Safe)
 task.spawn(function()
     while true do
         if autoRoGActive then
@@ -417,43 +371,28 @@ task.spawn(function()
                 local isEgoAlive = egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0
                 
                 if isEgoAlive then
-                    if not isEgoQuestActive() then
-                        cancelActivePrompts()
-                        task.wait(0.5)
-                        
-                        if giveQuests and giveQuests:IsA("RemoteEvent") then
-                            giveQuests:FireServer("VegetaDestructionKi")
-                        end
-                        task.wait(1.5)
+                    if giveQuests and giveQuests:IsA("RemoteEvent") then
+                        giveQuests:FireServer("VegetaDestructionKi")
                     end
-                    
-                    egoQuestGrabbed = isEgoQuestActive()
+                    egoQuestGrabbed = true 
+                    task.wait(2.5) -- Safe delay, no spamming
                 else
                     egoQuestGrabbed = false
                     if giveQuests and giveQuests:IsA("RemoteEvent") then
                         giveQuests:FireServer("VegetaChamber")
                     end
-                    
-                    local startWait = tick()
-                    local waitDuration = getHumanizedWait()
-                    while autoRoGActive and (tick() - startWait < waitDuration) do
-                        local checkEgo = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
-                        if checkEgo and checkEgo:FindFirstChild("Humanoid") and checkEgo.Humanoid.Health > 0 then
-                            cancelActivePrompts()
-                            break
-                        end
-                        task.wait(1)
-                    end
+                    task.wait(2.5)
                 end
             end)
         else
             egoQuestGrabbed = false
             task.wait(1)
         end
+        task.wait(0.5)
     end
 end)
 
--- 3. Throttled Anti-Crash Bring Bosses & Float Loop (Runs every 0.05s instead of 60 FPS Heartbeat)
+-- 3. Ultra-Lightweight Bring Bosses & Float Loop
 task.spawn(function()
     while true do
         if autoRoGActive or autoFloatActive or autoBringActive or autoBringTopActive then
@@ -528,7 +467,7 @@ task.spawn(function()
                     end
                 end
             end)
-            task.wait(0.05)
+            task.wait(0.1) -- Slowed down to prevent thread locks
         else
             task.wait(0.5)
         end
@@ -549,7 +488,7 @@ task.spawn(function()
                     end
                 end
             end)
-            task.wait(0.1)
+            task.wait(0.2)
         else
             task.wait(0.5)
         end
