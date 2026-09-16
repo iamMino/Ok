@@ -337,11 +337,10 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
-                                           -- PART 3: Automation Loops & Logic
+-- PART 3: Helper Functions & Automation
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
--- Helper: Auto-Cancel open dialogs/prompts on screen
 local function cancelActivePrompts()
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return end
@@ -368,7 +367,6 @@ local function cancelActivePrompts()
     end
 end
 
--- Helper: Safety check to verify if Ego quest is actually active on screen
 local function isEgoQuestActive()
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return false end
@@ -400,7 +398,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Realm of Gods Auto Farm Quest Controller (With Auto-Cancel & Quest Verifier)
+-- 2. Realm of Gods Auto Farm Quest Controller
 task.spawn(function()
     while true do
         if autoRoGActive then
@@ -412,23 +410,18 @@ task.spawn(function()
             local isEgoAlive = egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0
             
             if isEgoAlive then
-                -- Check if current active quest on screen is NOT Ego
                 if not isEgoQuestActive() then
-                    -- 1. Wipe away any lingering chamber/other quest windows
                     cancelActivePrompts()
                     task.wait(0.3)
                     
-                    -- 2. Grab Ultra Ego quest
                     if giveQuests and giveQuests:IsA("RemoteEvent") then
                         giveQuests:FireServer("VegetaDestructionKi")
                     end
                     task.wait(1.5)
                 end
                 
-                -- Verify if the quest was accepted successfully
                 egoQuestGrabbed = isEgoQuestActive()
             else
-                -- Ego is dead: grab Chamber quest for secondary farming
                 egoQuestGrabbed = false
                 if giveQuests and giveQuests:IsA("RemoteEvent") then
                     giveQuests:FireServer("VegetaChamber")
@@ -439,7 +432,6 @@ task.spawn(function()
                 while autoRoGActive and (tick() - startWait < waitDuration) do
                     local checkEgo = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
                     if checkEgo and checkEgo:FindFirstChild("Humanoid") and checkEgo.Humanoid.Health > 0 then
-                        -- Ego spawned mid-wait: immediately wipe open prompts and break
                         cancelActivePrompts()
                         break
                     end
