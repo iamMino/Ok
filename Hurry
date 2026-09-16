@@ -1,4 +1,4 @@
--- Services
+-- PART 1: Services, Config, & Base Frame
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -8,9 +8,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
--- ================================
--- CONFIGURATION & STATE
--- ================================
+-- Config & State
 local bossList = {
     "Vegeta", "WhisQ", "TrunksF", "Gogeta", "Vegetto", "Goku Black", 
     "GokuVegetaDestructionKi", "MoroQuestNamekian", "PiccoloQuest", 
@@ -27,11 +25,10 @@ local autoAttackActive = false
 local autoTransformActive = false
 local autoFloatActive = false
 local autoMerusActive = false
-local isTransformed = false
+local autoRoGActive = false
+local egoQuestGrabbed = false
 
--- ================================
--- UI SETUP & CREATION (Horizontal Multi-Page)
--- ================================
+-- GUI Creation
 if CoreGui:FindFirstChild("MasterHubUI") then
     CoreGui.MasterHubUI:Destroy()
 end
@@ -41,7 +38,6 @@ screenGui.Name = "MasterHubUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = CoreGui
 
--- Floating Toggle Button
 local toggleGuiBtn = Instance.new("TextButton")
 toggleGuiBtn.Name = "ToggleGuiBtn"
 toggleGuiBtn.Size = UDim2.new(0, 60, 0, 30)
@@ -56,7 +52,6 @@ local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 6)
 toggleCorner.Parent = toggleGuiBtn
 
--- Main Background Frame
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 480, 0, 185) 
@@ -73,7 +68,6 @@ toggleGuiBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
 end)
 
--- Title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Name = "Title"
 titleLabel.Size = UDim2.new(1, 0, 0, 24)
@@ -88,7 +82,7 @@ local titleCorner = Instance.new("UICorner")
 titleCorner.CornerRadius = UDim.new(0, 6)
 titleCorner.Parent = titleLabel
 
--- DRAGGING LOGIC
+-- Dragging Logic
 local dragging, dragInput, dragStart, startPos
 titleLabel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -109,10 +103,7 @@ UserInputService.InputChanged:Connect(function(input)
         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
-
--- ================================
--- TAB BAR SYSTEM
--- ================================
+-- PART 2: Tabs, Buttons, & Page Layouts
 local tabBar = Instance.new("Frame")
 tabBar.Size = UDim2.new(1, 0, 0, 26)
 tabBar.Position = UDim2.new(0, 0, 0, 24)
@@ -142,9 +133,6 @@ tab2Btn.TextSize = 12
 tab2Btn.BorderSizePixel = 0
 tab2Btn.Parent = tabBar
 
--- ================================
--- PAGES SETUP
--- ================================
 local page1 = Instance.new("Frame")
 page1.Size = UDim2.new(1, -10, 1, -55)
 page1.Position = UDim2.new(0, 5, 0, 55)
@@ -159,7 +147,6 @@ page2.BackgroundTransparency = 1
 page2.Visible = false
 page2.Parent = mainFrame
 
--- Tab Switching Logic
 tab1Btn.MouseButton1Click:Connect(function()
     page1.Visible = true
     page2.Visible = false
@@ -178,9 +165,6 @@ tab2Btn.MouseButton1Click:Connect(function()
     tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
 end)
 
--- ================================
--- PAGE 1: MAIN SETTINGS
--- ================================
 local containerLayout = Instance.new("UIListLayout")
 containerLayout.Parent = page1
 containerLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -216,26 +200,23 @@ local function createToggleInCol(col, name, text)
     return btn
 end
 
--- Column 1: Core Combat
 local col1 = createColumn(page1)
 col1.LayoutOrder = 1
 local transformToggle = createToggleInCol(col1, "TransformToggle", "Auto Transform")
 local attackToggle = createToggleInCol(col1, "AttackToggle", "Auto Attack")
 local floatToggle = createToggleInCol(col1, "FloatToggle", "Float Away")
 
--- Column 2: Quests & Brings
 local col2 = createColumn(page1)
 col2.LayoutOrder = 2
 local questToggle = createToggleInCol(col2, "QuestToggle", "Auto Quest")
 local bringToggle = createToggleInCol(col2, "BringToggle", "Bring Bosses")
 local bringTopToggle = createToggleInCol(col2, "BringTopToggle", "Bring Top")
 
--- Column 3: Special Toggles
 local col3 = createColumn(page1)
 col3.LayoutOrder = 3
 local merusToggle = createToggleInCol(col3, "MerusToggle", "Auto Merus TP")
+local rogToggle = createToggleInCol(col3, "RoGToggle", "RoG Auto Farm")
 
--- Column 4 (Scroll Frame for Boss List)
 local col4 = Instance.new("Frame")
 col4.Name = "BossSelectorCol"
 col4.Size = UDim2.new(0, 130, 1, 0)
@@ -281,12 +262,10 @@ for _, boss in ipairs(bossList) do
 end
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #bossList * 24)
 
--- Page 1 Toggles Logic
 transformToggle.MouseButton1Click:Connect(function()
     autoTransformActive = not autoTransformActive
     transformToggle.Text = autoTransformActive and "Auto Transform: ON" or "Auto Transform: OFF"
     transformToggle.BackgroundColor3 = autoTransformActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-    if autoTransformActive then isTransformed = false end
 end)
 
 attackToggle.MouseButton1Click:Connect(function()
@@ -325,10 +304,13 @@ merusToggle.MouseButton1Click:Connect(function()
     merusToggle.BackgroundColor3 = autoMerusActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
 end)
 
+rogToggle.MouseButton1Click:Connect(function()
+    autoRoGActive = not autoRoGActive
+    rogToggle.Text = autoRoGActive and "RoG Auto Farm: ON" or "RoG Auto Farm: OFF"
+    rogToggle.BackgroundColor3 = autoRoGActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
+    if not autoRoGActive then egoQuestGrabbed = false end
+end)
 
--- ================================
--- PAGE 2: TELEPORTS
--- ================================
 local page2Layout = Instance.new("UIListLayout")
 page2Layout.Parent = page2
 page2Layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -355,44 +337,14 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
-
-
--- ================================
--- SMART STATE SYNC HOOK (UI & Base Tracking)
--- ================================
-local gmt = getrawmetatable(game)
-setreadonly(gmt, false)
-local oldNamecall = gmt.__namecall
-
-gmt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    if method == "FireServer" and self.Parent and self.Parent.Name == "ssjs" then
-        if self.Name == "Base" then
-            isTransformed = false
-        elseif self.Name == "UI" then
-            isTransformed = true
-        end
-    end
-    return oldNamecall(self, ...)
-end)
-setreadonly(gmt, true)
-
-LocalPlayer.CharacterAdded:Connect(function(char)
-    isTransformed = false
-    local humanoid = char:WaitForChild("Humanoid", 5)
-    if humanoid then humanoid.Died:Connect(function() isTransformed = false end) end
-end)
-
--- ================================
--- BACKGROUND LOOPS & AUTOMATION
--- ================================
+-- PART 3: Automation Loops & Logic
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
--- 1. Auto Quest Loop
+-- 1. Standard Auto Quest Loop
 task.spawn(function()
     while true do
-        if autoQuestActive then
+        if autoQuestActive and not autoRoGActive then
             local remotes = ReplicatedStorage:FindFirstChild("Remotes")
             local giveQuests = remotes and remotes:FindFirstChild("giveQuests")
             if giveQuests and giveQuests:IsA("RemoteEvent") then
@@ -405,12 +357,81 @@ task.spawn(function()
     end
 end)
 
--- 2. Client Loop (Bring Bosses & Float)
+-- 2. Realm of Gods Auto Farm Quest Controller
+task.spawn(function()
+    while true do
+        if autoRoGActive then
+            local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+            local giveQuests = remotes and remotes:FindFirstChild("giveQuests")
+            local bossesFolder = workspace:FindFirstChild("Bosses")
+            
+            local egoBoss = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
+            local isEgoAlive = egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0
+            
+            if isEgoAlive then
+                if not egoQuestGrabbed then
+                    task.wait(rng:NextNumber(2.0, 5.0))
+                    if autoRoGActive and egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0 then
+                        if giveQuests and giveQuests:IsA("RemoteEvent") then
+                            giveQuests:FireServer("GokuVegetaDestructionKi")
+                        end
+                        task.wait(2)
+                        egoQuestGrabbed = true
+                    end
+                else
+                    task.wait(1)
+                end
+            else
+                egoQuestGrabbed = false
+                if giveQuests and giveQuests:IsA("RemoteEvent") then
+                    giveQuests:FireServer("VegetaChamber")
+                end
+                
+                local startWait = tick()
+                local waitDuration = getHumanizedWait()
+                while autoRoGActive and (tick() - startWait < waitDuration) do
+                    local checkEgo = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
+                    if checkEgo and checkEgo:FindFirstChild("Humanoid") and checkEgo.Humanoid.Health > 0 then
+                        break
+                    end
+                    task.wait(0.5)
+                end
+            end
+        else
+            egoQuestGrabbed = false
+            task.wait(1)
+        end
+    end
+end)
+
+-- 3. Client Loop (Bring Bosses & Float)
 RunService.Heartbeat:Connect(function()
     local playerChar = LocalPlayer.Character
     if playerChar and playerChar:FindFirstChild("HumanoidRootPart") then
         local hrp = playerChar.HumanoidRootPart
-        
+        local targetCFrame = hrp.CFrame * CFrame.new(0, 0, -4) 
+        local bossesFolder = workspace:FindFirstChild("Bosses")
+
+        -- Realm of Gods Bring Logic
+        if autoRoGActive and bossesFolder then
+            local egoBoss = bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
+            local isEgoAlive = egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0
+
+            if isEgoAlive then
+                if egoQuestGrabbed and egoBoss:FindFirstChild("HumanoidRootPart") then
+                    egoBoss.HumanoidRootPart.CFrame = targetCFrame
+                end
+            else
+                for _, boss in ipairs(bossesFolder:GetChildren()) do
+                    if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
+                        if boss.Humanoid.Health > 0 then
+                            boss.HumanoidRootPart.CFrame = targetCFrame
+                        end
+                    end
+                end
+            end
+        end
+
         -- Float
         if autoFloatActive then
             if hrp.Position.Y < 4900 then hrp.CFrame = CFrame.new(hrp.Position.X, 5000, hrp.Position.Z) end
@@ -418,21 +439,32 @@ RunService.Heartbeat:Connect(function()
         end
 
         -- Bring Normal
-        if autoBringActive then
-            local targetCFrame = hrp.CFrame * CFrame.new(0, 0, -4) 
-            local bossesFolder = workspace:FindFirstChild("Bosses")
+        if autoBringActive and not autoRoGActive then
             if bossesFolder then
+                local foundBoss = false
                 for _, boss in ipairs(bossesFolder:GetChildren()) do
                     if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
-                        if boss.Humanoid.Health > 0 then boss.HumanoidRootPart.CFrame = targetCFrame end
+                        if boss.Humanoid.Health > 0 then 
+                            boss.HumanoidRootPart.CFrame = targetCFrame 
+                            foundBoss = true
+                        end
+                    end
+                end
+                if not foundBoss then
+                    local topBossesFolder = workspace:FindFirstChild("TOPBosses")
+                    if topBossesFolder then
+                        for _, boss in ipairs(topBossesFolder:GetChildren()) do
+                            if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
+                                if boss.Humanoid.Health > 0 then boss.HumanoidRootPart.CFrame = targetCFrame end
+                            end
+                        end
                     end
                 end
             end
         end
 
         -- Bring TOP
-        if autoBringTopActive then
-            local targetCFrame = hrp.CFrame * CFrame.new(0, 0, -4) 
+        if autoBringTopActive and not autoRoGActive then
             local topBossesFolder = workspace:FindFirstChild("TOPBosses")
             if topBossesFolder then
                 for _, boss in ipairs(topBossesFolder:GetChildren()) do
@@ -445,21 +477,14 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- 3. Merus Auto-TP Behind Loop
+-- 4. Merus Auto-TP
 task.spawn(function()
     while true do
         if autoMerusActive then
             local playerChar = LocalPlayer.Character
             if playerChar and playerChar:FindFirstChild("HumanoidRootPart") then
                 local npcsFolder = workspace:FindFirstChild("NPCs")
-                local merus = nil
-                
-                if npcsFolder and npcsFolder:FindFirstChild("MerusCH") then
-                    merus = npcsFolder.MerusCH
-                elseif workspace:FindFirstChild("MerusCH") then
-                    merus = workspace.MerusCH
-                end
-                
+                local merus = (npcsFolder and npcsFolder:FindFirstChild("MerusCH")) or workspace:FindFirstChild("MerusCH")
                 if merus and merus:FindFirstChild("HumanoidRootPart") then
                     playerChar.HumanoidRootPart.CFrame = merus.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
                 end
@@ -471,7 +496,7 @@ task.spawn(function()
     end
 end)
 
--- 4. Auto-Attack
+-- 5. Auto-Attack
 task.spawn(function()
     while true do
         if autoAttackActive then
@@ -485,19 +510,33 @@ task.spawn(function()
     end
 end)
 
--- 5. Auto Transform Mastery Loop (Fixed Instant Re-trigger)
+-- 6. Auto Transform Loop
 task.spawn(function()
     while true do
-        if autoTransformActive and not isTransformed then
-            local ssjsFolder = ReplicatedStorage:FindFirstChild("ssjs")
-            if ssjsFolder then
-                local uiRemote = ssjsFolder:FindFirstChild("UI")
-                if uiRemote and uiRemote:IsA("RemoteEvent") then
-                    uiRemote:FireServer()
-                    isTransformed = true
+        if autoTransformActive then
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                local hasMUI = char:FindFirstChild("MUI")
+                local hasUI = char:FindFirstChild("UI") or char:FindFirstChild("Ui")
+                local ssjsFolder = ReplicatedStorage:FindFirstChild("ssjs")
+                if ssjsFolder then
+                    if not hasUI and not hasMUI then
+                        local uiRemote = ssjsFolder:FindFirstChild("UI")
+                        if uiRemote then uiRemote:FireServer() end
+                        task.wait(6)
+                    elseif hasUI and not hasMUI then
+                        local muiRemote = ssjsFolder:FindFirstChild("MUI")
+                        if muiRemote then
+                            muiRemote:FireServer()
+                        else
+                            local uiRemote = ssjsFolder:FindFirstChild("UI")
+                            if uiRemote then uiRemote:FireServer() end
+                        end
+                        task.wait(6)
+                    end
                 end
             end
         end
-        task.wait(0.1) -- Fast polling to instantly catch drops to base
+        task.wait(1)
     end
 end)
