@@ -373,7 +373,7 @@ task.spawn(function()
                     task.wait(rng:NextNumber(2.0, 5.0))
                     if autoRoGActive and egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0 then
                         if giveQuests and giveQuests:IsA("RemoteEvent") then
-                            giveQuests:FireServer("GokuVegetaDestructionKi")
+                            giveQuests:FireServer("VegetaDestructionKi")
                         end
                         task.wait(2)
                         egoQuestGrabbed = true
@@ -540,3 +540,5 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
+                        
