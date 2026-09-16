@@ -337,29 +337,63 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
+                end
+                
+                egoQuestGrabbed = isEgoQuestActive()
+            else
+                egoQuestGrabbed = false
+                if giveQuests and giveQuests:IsA("RemoteEvent") then
+                    giveQuests:FireServer("VegetaChamber")
+                end
+                
+                local startWait = tick()
+                local waitDuration = getHumanizedWait()
+                while autoRoGActive and (tick() - startWait < waitDuration) do
+                    local checkEgo = bossesFolder and bossesFolder:FindFirstChild("VegetaUltraEgoQuest")
+                    if checkEgo and checkEgo:FindFirstChild("Humanoid") and checkEgo.Humanoid.Health > 0 then
+                        cancelActivePrompts()
+                        break
+                    end
+                    task.wait(0.5)
+                end
+            end
+        else
+                    -- Bring TOP
+        if autoBringTopActive and not autoRoGActive then
+            local topBossesFolder = workspace:FindFirstChild("TOPBosses")
+            if topBossesFolder then
+                for _, boss in ipairs(topBossesFolder:GetChildren()) do
+                    if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
+                        if boss.Humanoid.Health > 0 then boss.HumanoidRootPart.CFrame = targetCFrame end
+                    end
+                end
+            end
+        end
+    end
+end)
 -- PART 3: Helper Functions & Automation
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
+-- Optimized prompt canceler (Ignores MasterHubUI & Chat to prevent crashes)
 local function cancelActivePrompts()
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return end
     
     for _, gui in ipairs(playerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and gui.Enabled then
+        if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "MasterHubUI" and gui.Name ~= "Chat" and gui.Name ~= "BubbleChat" then
             for _, desc in ipairs(gui:GetDescendants()) do
-                if desc:IsA("GuiObject") and desc.Visible then
-                    if desc:IsA("TextButton") or desc:IsA("ImageButton") then
-                        local btnText = desc:IsA("TextButton") and desc.Text:lower() or ""
-                        if btnText:find("cancel") or btnText:find("close") or btnText:find("no") or desc.Name:lower():find("cancel") then
-                            pcall(function()
-                                if firesignal then
-                                    firesignal(desc.MouseButton1Click)
-                                else
-                                    desc.Visible = false
-                                end
-                            end)
-                        end
+                if (desc:IsA("TextButton") or desc:IsA("ImageButton")) and desc.Visible then
+                    local btnText = desc:IsA("TextButton") and desc.Text:lower() or ""
+                    local btnName = desc.Name:lower()
+                    if btnText:find("cancel") or btnText:find("close") or btnText:find("no") or btnName:find("cancel") then
+                        pcall(function()
+                            if firesignal then
+                                firesignal(desc.MouseButton1Click)
+                            else
+                                desc.Visible = false
+                            end
+                        end)
                     end
                 end
             end
@@ -367,15 +401,20 @@ local function cancelActivePrompts()
     end
 end
 
+-- Optimized quest text verifier
 local function isEgoQuestActive()
     local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return false end
     
-    for _, desc in ipairs(playerGui:GetDescendants()) do
-        if desc:IsA("TextLabel") and desc.Visible then
-            local text = desc.Text:lower()
-            if text:find("destruction ki") or text:find("ultra ego") or text:find("vegetadestructionki") then
-                return true
+    for _, gui in ipairs(playerGui:GetChildren()) do
+        if gui:IsA("ScreenGui") and gui.Enabled and gui.Name ~= "MasterHubUI" and gui.Name ~= "Chat" then
+            for _, desc in ipairs(gui:GetDescendants()) do
+                if desc:IsA("TextLabel") and desc.Visible then
+                    local text = desc.Text:lower()
+                    if text:find("destruction ki") or text:find("ultra ego") or text:find("vegetadestructionki") then
+                        return true
+                    end
+                end
             end
         end
     end
@@ -412,7 +451,7 @@ task.spawn(function()
             if isEgoAlive then
                 if not isEgoQuestActive() then
                     cancelActivePrompts()
-                    task.wait(0.3)
+                    task.wait(0.5)
                     
                     if giveQuests and giveQuests:IsA("RemoteEvent") then
                         giveQuests:FireServer("VegetaDestructionKi")
@@ -435,7 +474,7 @@ task.spawn(function()
                         cancelActivePrompts()
                         break
                     end
-                    task.wait(0.5)
+                    task.wait(1)
                 end
             end
         else
