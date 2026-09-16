@@ -7,7 +7,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Config & State
+-- Config & State (Vegeta Chamber and Ego included)
 local bossList = {
     "Vegeta", "WhisQ", "TrunksF", "Gogeta", "Vegetto", "Goku Black", 
     "GokuVegetaDestructionKi", "MoroQuestNamekian", "PiccoloQuest", 
@@ -336,11 +336,11 @@ tpTopBtn.MouseButton1Click:Connect(function()
         playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
     end
 end)
-  -- PART 3: Helper Functions & Crash-Free Loops (UI CHECKS REMOVED)
+-- PART 3: Helper Functions & Crash-Free Loops (With Cooldowns)
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
--- 1. Standard Auto Quest Loop
+-- 1. Standard Auto Quest Loop (With cooldown)
 task.spawn(function()
     while true do
         if autoQuestActive and not autoRoGActive then
@@ -358,7 +358,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Realm of Gods Auto Farm (Stripped & Safe)
+-- 2. Realm of Gods Auto Farm (Vegeta Chamber & Ego focused with Cooldowns)
 task.spawn(function()
     while true do
         if autoRoGActive then
@@ -371,24 +371,24 @@ task.spawn(function()
                 local isEgoAlive = egoBoss and egoBoss:FindFirstChild("Humanoid") and egoBoss.Humanoid.Health > 0
                 
                 if isEgoAlive then
-                    if giveQuests and giveQuests:IsA("RemoteEvent") then
-                        giveQuests:FireServer("VegetaDestructionKi")
+                    if not egoQuestGrabbed then
+                        if giveQuests and giveQuests:IsA("RemoteEvent") then
+                            giveQuests:FireServer("VegetaDestructionKi")
+                            egoQuestGrabbed = true 
+                        end
                     end
-                    egoQuestGrabbed = true 
-                    task.wait(2.5) -- Safe delay, no spamming
                 else
                     egoQuestGrabbed = false
                     if giveQuests and giveQuests:IsA("RemoteEvent") then
                         giveQuests:FireServer("VegetaChamber")
                     end
-                    task.wait(2.5)
                 end
             end)
+            task.wait(getHumanizedWait())
         else
             egoQuestGrabbed = false
             task.wait(1)
         end
-        task.wait(0.5)
     end
 end)
 
@@ -467,7 +467,7 @@ task.spawn(function()
                     end
                 end
             end)
-            task.wait(0.1) -- Slowed down to prevent thread locks
+            task.wait(0.1)
         else
             task.wait(0.5)
         end
