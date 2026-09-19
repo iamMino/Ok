@@ -7,7 +7,7 @@ local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Config & State (Vegeta Chamber and Ego included)
+-- Config & State (Added autoWaveBringActive)
 local bossList = {
     "Vegeta", "WhisQ", "TrunksF", "Gogeta", "Vegetto", "Goku Black", 
     "GokuVegetaDestructionKi", "MoroQuestNamekian", "PiccoloQuest", 
@@ -20,6 +20,7 @@ local questTarget = bossList[1]
 local autoQuestActive = false
 local autoBringActive = false
 local autoBringTopActive = false
+local autoWaveBringActive = false -- New Wave Bring Toggle State
 local autoAttackActive = false
 local autoTransformActive = false
 local autoFloatActive = false
@@ -102,245 +103,12 @@ UserInputService.InputChanged:Connect(function(input)
         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
--- PART 2: Tabs, Buttons, & Page Layouts
-local tabBar = Instance.new("Frame")
-tabBar.Size = UDim2.new(1, 0, 0, 26)
-tabBar.Position = UDim2.new(0, 0, 0, 24)
-tabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-tabBar.BorderSizePixel = 0
-tabBar.Parent = mainFrame
 
-local tab1Btn = Instance.new("TextButton")
-tab1Btn.Size = UDim2.new(0.5, 0, 1, 0)
-tab1Btn.Position = UDim2.new(0, 0, 0, 0)
-tab1Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-tab1Btn.Text = "Main"
-tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-tab1Btn.Font = Enum.Font.SourceSansBold
-tab1Btn.TextSize = 12
-tab1Btn.BorderSizePixel = 0
-tab1Btn.Parent = tabBar
-
-local tab2Btn = Instance.new("TextButton")
-tab2Btn.Size = UDim2.new(0.5, 0, 1, 0)
-tab2Btn.Position = UDim2.new(0.5, 0, 0, 0)
-tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-tab2Btn.Text = "Teleports"
-tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-tab2Btn.Font = Enum.Font.SourceSansBold
-tab2Btn.TextSize = 12
-tab2Btn.BorderSizePixel = 0
-tab2Btn.Parent = tabBar
-
-local page1 = Instance.new("Frame")
-page1.Size = UDim2.new(1, -10, 1, -55)
-page1.Position = UDim2.new(0, 5, 0, 55)
-page1.BackgroundTransparency = 1
-page1.Visible = true
-page1.Parent = mainFrame
-
-local page2 = Instance.new("Frame")
-page2.Size = UDim2.new(1, -10, 1, -55)
-page2.Position = UDim2.new(0, 5, 0, 55)
-page2.BackgroundTransparency = 1
-page2.Visible = false
-page2.Parent = mainFrame
-
-tab1Btn.MouseButton1Click:Connect(function()
-    page1.Visible = true
-    page2.Visible = false
-    tab1Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tab2Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-    tab2Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-end)
-
-tab2Btn.MouseButton1Click:Connect(function()
-    page1.Visible = false
-    page2.Visible = true
-    tab2Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
-    tab2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tab1Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-    tab1Btn.TextColor3 = Color3.fromRGB(180, 180, 180)
-end)
-
-local containerLayout = Instance.new("UIListLayout")
-containerLayout.Parent = page1
-containerLayout.FillDirection = Enum.FillDirection.Horizontal
-containerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-containerLayout.Padding = UDim.new(0, 5)
-containerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-local function createColumn(parent)
-    local col = Instance.new("Frame")
-    col.Size = UDim2.new(0, 105, 1, 0)
-    col.BackgroundTransparency = 1
-    col.Parent = parent
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = col
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 3)
-    return col
-end
-
-local function createToggleInCol(col, name, text)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(1, 0, 0, 24)
-    btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-    btn.Text = text .. ": OFF"
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 10
-    btn.Font = Enum.Font.SourceSansBold
-    btn.Parent = col
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = btn
-    return btn
-end
-
-local col1 = createColumn(page1)
-col1.LayoutOrder = 1
-local transformToggle = createToggleInCol(col1, "TransformToggle", "Auto Transform")
-local attackToggle = createToggleInCol(col1, "AttackToggle", "Auto Attack")
-local floatToggle = createToggleInCol(col1, "FloatToggle", "Float Away")
-
-local col2 = createColumn(page1)
-col2.LayoutOrder = 2
-local questToggle = createToggleInCol(col2, "QuestToggle", "Auto Quest")
-local bringToggle = createToggleInCol(col2, "BringToggle", "Bring Bosses")
-local bringTopToggle = createToggleInCol(col2, "BringTopToggle", "Bring Top")
-
-local col3 = createColumn(page1)
-col3.LayoutOrder = 3
-local merusToggle = createToggleInCol(col3, "MerusToggle", "Auto Merus TP")
-local rogToggle = createToggleInCol(col3, "RoGToggle", "RoG Auto Farm")
-
-local col4 = Instance.new("Frame")
-col4.Name = "BossSelectorCol"
-col4.Size = UDim2.new(0, 130, 1, 0)
-col4.BackgroundTransparency = 1
-col4.LayoutOrder = 4
-col4.Parent = page1
-
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-scrollFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-scrollFrame.BorderSizePixel = 0
-scrollFrame.ScrollBarThickness = 4
-scrollFrame.Parent = col4
-
-local scrollCorner = Instance.new("UICorner")
-scrollCorner.CornerRadius = UDim.new(0, 4)
-scrollCorner.Parent = scrollFrame
-
-local scrollLayout = Instance.new("UIListLayout")
-scrollLayout.Parent = scrollFrame
-scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
-scrollLayout.Padding = UDim.new(0, 2)
-
-local questButtons = {}
-for _, boss in ipairs(bossList) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 22)
-    btn.BackgroundColor3 = (boss == questTarget) and Color3.fromRGB(60, 120, 180) or Color3.fromRGB(40, 40, 45)
-    btn.Text = " " .. boss
-    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.TextSize = 11
-    btn.Font = Enum.Font.SourceSans
-    btn.BorderSizePixel = 0
-    btn.Parent = scrollFrame
-    table.insert(questButtons, btn)
-
-    btn.MouseButton1Click:Connect(function()
-        questTarget = boss
-        for _, b in ipairs(questButtons) do b.BackgroundColor3 = Color3.fromRGB(40, 40, 45) end
-        btn.BackgroundColor3 = Color3.fromRGB(60, 120, 180)
-    end)
-end
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #bossList * 24)
-
-transformToggle.MouseButton1Click:Connect(function()
-    autoTransformActive = not autoTransformActive
-    transformToggle.Text = autoTransformActive and "Auto Transform: ON" or "Auto Transform: OFF"
-    transformToggle.BackgroundColor3 = autoTransformActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-attackToggle.MouseButton1Click:Connect(function()
-    autoAttackActive = not autoAttackActive
-    attackToggle.Text = autoAttackActive and "Auto Attack: ON" or "Auto Attack: OFF"
-    attackToggle.BackgroundColor3 = autoAttackActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-floatToggle.MouseButton1Click:Connect(function()
-    autoFloatActive = not autoFloatActive
-    floatToggle.Text = autoFloatActive and "Float Away: ON" or "Float Away: OFF"
-    floatToggle.BackgroundColor3 = autoFloatActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-questToggle.MouseButton1Click:Connect(function()
-    autoQuestActive = not autoQuestActive
-    questToggle.Text = autoQuestActive and "Auto Quest: ON" or "Auto Quest: OFF"
-    questToggle.BackgroundColor3 = autoQuestActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-bringToggle.MouseButton1Click:Connect(function()
-    autoBringActive = not autoBringActive
-    bringToggle.Text = autoBringActive and "Bring Bosses: ON" or "Bring Bosses: OFF"
-    bringToggle.BackgroundColor3 = autoBringActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-bringTopToggle.MouseButton1Click:Connect(function()
-    autoBringTopActive = not autoBringTopActive
-    bringTopToggle.Text = autoBringTopActive and "Bring Top: ON" or "Bring Top: OFF"
-    bringTopToggle.BackgroundColor3 = autoBringTopActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-merusToggle.MouseButton1Click:Connect(function()
-    autoMerusActive = not autoMerusActive
-    merusToggle.Text = autoMerusActive and "Auto Merus TP: ON" or "Auto Merus TP: OFF"
-    merusToggle.BackgroundColor3 = autoMerusActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-end)
-
-rogToggle.MouseButton1Click:Connect(function()
-    autoRoGActive = not autoRoGActive
-    rogToggle.Text = autoRoGActive and "RoG Auto Farm: ON" or "RoG Auto Farm: OFF"
-    rogToggle.BackgroundColor3 = autoRoGActive and Color3.fromRGB(50, 180, 80) or Color3.fromRGB(180, 50, 50)
-    if not autoRoGActive then egoQuestGrabbed = false end
-end)
-
-local page2Layout = Instance.new("UIListLayout")
-page2Layout.Parent = page2
-page2Layout.SortOrder = Enum.SortOrder.LayoutOrder
-page2Layout.Padding = UDim.new(0, 10)
-page2Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-page2Layout.VerticalAlignment = Enum.VerticalAlignment.Center
-
-local tpTopBtn = Instance.new("TextButton")
-tpTopBtn.Size = UDim2.new(0, 200, 0, 40)
-tpTopBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
-tpTopBtn.Text = "Teleport to TOP"
-tpTopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpTopBtn.Font = Enum.Font.SourceSansBold
-tpTopBtn.TextSize = 14
-tpTopBtn.Parent = page2
-
-local tpCorner1 = Instance.new("UICorner")
-tpCorner1.CornerRadius = UDim.new(0, 6)
-tpCorner1.Parent = tpTopBtn
-
-tpTopBtn.MouseButton1Click:Connect(function()
-    local playerChar = LocalPlayer.Character
-    if playerChar and playerChar:FindFirstChild("HumanoidRootPart") then
-        playerChar.HumanoidRootPart.CFrame = CFrame.new(-49081, 19677, -41340)
-    end
-end)
--- PART 3: Helper Functions & Crash-Free Loops (With Cooldowns)
+-- PART 3: Helper Functions & Crash-Free Loops (With Wave Bring Integration)
 local rng = Random.new()
 local function getHumanizedWait() return rng:NextNumber(8.0, 15.0) end
 
--- 1. Standard Auto Quest Loop (With cooldown)
+-- 1. Standard Auto Quest Loop
 task.spawn(function()
     while true do
         if autoQuestActive and not autoRoGActive then
@@ -358,7 +126,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Realm of Gods Auto Farm (Vegeta Chamber & Ego focused with Cooldowns)
+-- 2. Realm of Gods Auto Farm
 task.spawn(function()
     while true do
         if autoRoGActive then
@@ -392,10 +160,10 @@ task.spawn(function()
     end
 end)
 
--- 3. Ultra-Lightweight Bring Bosses & Float Loop
+-- 3. Ultra-Lightweight Bring Bosses, Wave NPCs, & Float Loop
 task.spawn(function()
     while true do
-        if autoRoGActive or autoFloatActive or autoBringActive or autoBringTopActive then
+        if autoRoGActive or autoFloatActive or autoBringActive or autoBringTopActive or autoWaveBringActive then
             pcall(function()
                 local playerChar = LocalPlayer.Character
                 if playerChar and playerChar:FindFirstChild("HumanoidRootPart") then
@@ -461,6 +229,43 @@ task.spawn(function()
                             for _, boss in ipairs(topBossesFolder:GetChildren()) do
                                 if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") then
                                     if boss.Humanoid.Health > 0 then boss.HumanoidRootPart.CFrame = targetCFrame end
+                                end
+                            end
+                        end
+                    end
+
+                    -- Bring Wave Enemies (Scans workspace dynamically for dynamic wave entities)
+                    if autoWaveBringActive then
+                        for _, obj in ipairs(workspace:GetChildren()) do
+                            if obj:IsA("Model") and obj ~= playerChar then
+                                local humanoid = obj:FindFirstChildOfClass("Humanoid")
+                                local rootPart = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("Torso")
+                                
+                                if humanoid and rootPart and humanoid.Health > 0 then
+                                    local isPlayer = false
+                                    for _, p in ipairs(Players:GetPlayers()) do
+                                        if p.Character == obj then
+                                            isPlayer = true
+                                            break
+                                        end
+                                    end
+                                    
+                                    if not isPlayer then
+                                        rootPart.CFrame = targetCFrame
+                                    end
+                                end
+                            end
+                            
+                            if obj:IsA("Folder") then
+                                for _, subObj in ipairs(obj:GetChildren()) do
+                                    if subObj:IsA("Model") then
+                                        local humanoid = subObj:FindFirstChildOfClass("Humanoid")
+                                        local rootPart = subObj:FindFirstChild("HumanoidRootPart") or subObj:FindFirstChild("Torso")
+                                        
+                                        if humanoid and rootPart and humanoid.Health > 0 then
+                                            rootPart.CFrame = targetCFrame
+                                        end
+                                    end
                                 end
                             end
                         end
